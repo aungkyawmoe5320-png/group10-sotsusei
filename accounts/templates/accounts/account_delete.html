@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-6">
+  <div class="card border-danger"><div class="card-body">
+    <h1 class="h5 text-danger">アカウントを削除しますか？</h1>
+    <p>登録した事前情報と体調履歴も見られなくなります。この操作は元に戻せません。</p>
+    <form method="post" class="d-flex gap-2">
+      {% csrf_token %}
+      <button class="btn btn-danger">削除する</button>
+      <a class="btn btn-outline-secondary" href="{% url 'account_detail' %}">戻る</a>
+    </form>
+  </div></div>
+</div></div>
+{% endblock %}

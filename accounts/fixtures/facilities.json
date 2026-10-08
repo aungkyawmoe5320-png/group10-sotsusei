@@ -1,0 +1,4 @@
+[
+  {"model": "accounts.facility", "pk": 1, "fields": {"facility_code": "F-0012", "name": "みまもり北ケアホーム（テスト用）"}},
+  {"model": "accounts.facility", "pk": 2, "fields": {"facility_code": "F-0020", "name": "南区デイサービスセンター（テスト用）"}}
+]

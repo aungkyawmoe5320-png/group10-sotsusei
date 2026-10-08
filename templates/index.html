@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center py-4">
+  <h1 class="h2 mb-2">在宅介護と介護現場を、ひとつの画面で支える</h1>
+  <p class="text-muted">薬やカルテの情報から予定をつくり、体調を毎日記録します。</p>
+</div>
+<div class="row g-4 justify-content-center">
+  <div class="col-md-5">
+    <div class="card h-100 shadow-sm"><div class="card-body text-center">
+      <i class="bi bi-house-heart display-5 text-success"></i>
+      <h2 class="h5 mt-2">一般ユーザーの方</h2>
+      <p class="small text-muted">ご家族を自宅で介護している方</p>
+      <a class="btn btn-success" href="{% url 'login' 'user' %}">ログイン</a>
+    </div></div>
+  </div>
+  <div class="col-md-5">
+    <div class="card h-100 shadow-sm"><div class="card-body text-center">
+      <i class="bi bi-person-badge display-5 text-primary"></i>
+      <h2 class="h5 mt-2">介護士の方</h2>
+      <p class="small text-muted">担当する利用者の予定と体調を確認する方</p>
+      <a class="btn btn-primary" href="{% url 'login' 'caregiver' %}">ログイン</a>
+    </div></div>
+  </div>
+</div>
+<p class="text-center mt-4"><a href="{% url 'account_new' %}">はじめての方はアカウント登録</a></p>
+{% endblock %}
