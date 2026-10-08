@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-1">入所者一覧</h1>
+<div class="text-muted small mb-3">{{ user.facility }}</div>
+<div class="card shadow-sm"><div class="card-body">
+  <p class="mb-1">{{ user.name }} さん、ようこそ。</p>
+  <p class="text-muted mb-0">入所者一覧・受け入れ候補の検索は、来週以降に追加されます。</p>
+</div></div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-5">
+  <div class="card shadow-sm"><div class="card-body">
+    <h1 class="h4 mb-3">{% if target == 'caregiver' %}介護士{% else %}一般ユーザー{% endif %}ログイン</h1>
+    {% for error in form.non_field_errors %}<div class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include "includes/field.html" with field=form.email %}
+      {% if target == 'caregiver' %}
+        {% include "includes/field.html" with field=form.facility_code %}
+      {% endif %}
+      {% include "includes/field.html" with field=form.password %}
+      <button class="btn btn-{% if target == 'caregiver' %}primary{% else %}success{% endif %} w-100">ログイン</button>
+    </form>
+    <div class="mt-3 small d-flex justify-content-between">
+      <a href="{% url 'account_new' %}">新規登録</a>
+      {% if target == 'caregiver' %}
+        <a href="{% url 'login' 'user' %}">一般ユーザーの方はこちら</a>
+      {% else %}
+        <a href="{% url 'login' 'caregiver' %}">介護士の方はこちら</a>
+      {% endif %}
+    </div>
+  </div></div>
+</div></div>
+{% endblock %}

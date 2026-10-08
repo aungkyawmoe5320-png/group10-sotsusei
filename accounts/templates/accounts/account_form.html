@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-6">
+  <h1 class="h4 mb-3">{% if mode == 'new' %}アカウント登録{% else %}アカウント情報の編集{% endif %}</h1>
+  <form method="post" class="card card-body shadow-sm" novalidate>
+    {% csrf_token %}
+    {% if mode == 'new' %}
+      <div class="mb-3">
+        <label class="form-label d-block">利用の種類</label>
+        {% for radio in form.role %}
+        <div class="form-check form-check-inline">
+          {{ radio.tag }}
+          <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+        </div>
+        {% endfor %}
+      </div>
+      <div id="facility-field" class="d-none">
+        {% include "includes/field.html" with field=form.facility_code %}
+      </div>
+    {% endif %}
+    {% include "includes/field.html" with field=form.name %}
+    {% include "includes/field.html" with field=form.email %}
+    {% if mode == 'new' %}
+      {% include "includes/field.html" with field=form.password %}
+    {% endif %}
+    <div class="d-flex gap-2">
+      <button class="btn btn-success">{% if mode == 'new' %}登録する{% else %}保存する{% endif %}</button>
+      <a class="btn btn-outline-secondary" href="{% if mode == 'new' %}{% url 'index' %}{% else %}{% url 'account_detail' %}{% endif %}">キャンセル</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}
+{% block script %}
+{% if mode == 'new' %}
+<script>
+// 「介護士」を選んだときだけ施設IDの欄を表示する
+const facility = document.getElementById('facility-field');
+const radios = document.querySelectorAll('input[name=role]');
+function toggleFacility() {
+  const checked = document.querySelector('input[name=role]:checked');
+  facility.classList.toggle('d-none', !checked || checked.value !== 'caregiver');
+}
+radios.forEach(r => r.addEventListener('change', toggleFacility));
+toggleFacility();  // エラーで戻ってきたときも正しく表示する
+</script>
+{% endif %}
+{% endblock %}

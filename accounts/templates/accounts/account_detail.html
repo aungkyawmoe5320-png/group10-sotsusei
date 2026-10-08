@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-6">
+  <h1 class="h4 mb-3">アカウント</h1>
+  <dl class="row card card-body shadow-sm flex-row">
+    <dt class="col-4">氏名</dt><dd class="col-8">{{ user.name }}</dd>
+    <dt class="col-4">メール</dt><dd class="col-8">{{ user.email }}</dd>
+    <dt class="col-4">種類</dt><dd class="col-8">{{ user.get_role_display }}</dd>
+    {% if user.is_caregiver %}
+    <dt class="col-4">所属施設</dt><dd class="col-8">{{ user.facility }}</dd>
+    {% endif %}
+  </dl>
+  <a class="btn btn-success" href="{% url 'account_edit' %}">編集</a>
+  <a class="btn btn-outline-danger" href="{% url 'account_delete' %}">削除</a>
+</div></div>
+{% endblock %}
