@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}事前登録 | みまもりケア{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+  <h1 class="h4 mb-0">事前登録</h1>
+  <a class="btn btn-success btn-sm" href="#"><i class="bi bi-plus-circle"></i> 登録する</a>
+</div>
+<p class="text-muted">身体の状況ごとに、病名・病院・薬・要介護度・注意事項を登録します。入所希望を送るときに、介護施設へ伝わります。</p>
+{% if entries %}
+<div class="list-group shadow-sm">
+  {% for e in entries %}
+  <div class="list-group-item">
+    <h2 class="h5 mb-1">{{ e.condition }}</h2>
+    <div class="small text-muted">{% if e.diagnosis %}病名: {{ e.diagnosis }}　／　{% endif %}病院: {{ e.hospital|default:"未登録" }}　／　薬: {{ e.medications.all|length }}件</div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-secondary">まだ登録がありません。「登録する」から登録してください。</div>
+{% endif %}
+{% endblock %}
