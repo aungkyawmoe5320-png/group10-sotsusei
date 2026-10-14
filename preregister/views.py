@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from accounts.decorators import user_required
 
@@ -9,6 +10,7 @@ from .models import CareLevel, PreRegistration, Timing
 
 MSG_ADDED = "事前登録を追加しました。"
 MSG_UPDATED = "事前登録を更新しました。"
+MSG_DELETED = "事前登録を削除しました。"
 
 
 def _own_entry(request, pk):
@@ -69,3 +71,13 @@ def preregister_edit(request, pk):
     else:
         form = PreRegistrationForm(instance=entry, user=request.user)
     return _form_page(request, form, "edit", cancel_url=reverse("preregister_detail", args=[entry.pk]))
+
+
+@user_required
+@require_POST
+def preregister_delete(request, pk):
+    entry = _own_entry(request, pk)
+    if entry is not None:
+        entry.delete()
+        messages.info(request, MSG_DELETED)
+    return redirect("preregister")

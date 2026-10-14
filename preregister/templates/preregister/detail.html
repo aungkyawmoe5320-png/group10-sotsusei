@@ -16,6 +16,10 @@
     </dl>
     <div class="d-flex flex-wrap gap-2">
       <a class="btn btn-success" href="{% url 'preregister_edit' e.pk %}"><i class="bi bi-pencil"></i> 編集</a>
+      <form method="post" action="{% url 'preregister_delete' e.pk %}" data-confirm="この事前登録（{{ e.condition }}）を削除しますか？">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger"><i class="bi bi-trash"></i> 削除</button>
+      </form>
     </div>
   </div></div>
 </div></div>
