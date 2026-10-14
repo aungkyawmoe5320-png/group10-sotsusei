@@ -1,5 +1,5 @@
 """
-Django settings for config project (グループ10 卒業制作 / みまもりケア).
+Django settings for config project (グループ10 卒業制作 / みまもりケアリング).
 
 Secrets and server-specific values come from environment variables,
 so nothing sensitive is stored in this public repository.
@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'accounts',
+    'preregister',
 ]
 
 MIDDLEWARE = [
