@@ -10,8 +10,13 @@
 <div class="list-group shadow-sm">
   {% for e in entries %}
   <div class="list-group-item">
-    <h2 class="h5 mb-1">{{ e.condition }}</h2>
-    <div class="small text-muted">{% if e.diagnosis %}病名: {{ e.diagnosis }}　／　{% endif %}病院: {{ e.hospital|default:"未登録" }}　／　薬: {{ e.medications.all|length }}件</div>
+    <div class="row g-2 align-items-center">
+      <div class="col-12 col-md">
+        <h2 class="h5 mb-1">{{ e.condition }}</h2>
+        <div class="small text-muted">{% if e.diagnosis %}病名: {{ e.diagnosis }}　／　{% endif %}病院: {{ e.hospital|default:"未登録" }}　／　薬: {{ e.medications.all|length }}件</div>
+      </div>
+      <div class="col-12 col-md-auto"><a class="btn btn-outline-success w-100" href="{% url 'preregister_detail' e.pk %}">詳細</a></div>
+    </div>
   </div>
   {% endfor %}
 </div>

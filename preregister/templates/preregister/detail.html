@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}事前登録の詳細 | みまもりケア{% endblock %}
+{% block content %}
+<a class="btn btn-outline-secondary btn-sm mb-3" href="{% url 'preregister' %}"><i class="bi bi-arrow-left"></i> 戻る</a>
+<div class="row justify-content-center"><div class="col-lg-8">
+  <div class="card shadow-sm"><div class="card-body">
+    <div class="small text-muted">身体状況</div>
+    <h1 class="h4 mb-3">{{ e.condition }}</h1>
+    <dl class="row mb-3">
+      <dt class="col-4">病名</dt><dd class="col-8">{{ e.diagnosis|default:"未登録" }}</dd>
+      <dt class="col-4">病院</dt><dd class="col-8">{{ e.hospital|default:"未登録" }}</dd>
+      <dt class="col-4">薬</dt>
+      <dd class="col-8">{% if e.medications.all %}<ul class="ps-3 mb-0">{% for m in e.medications.all %}<li>{{ m.name }}（{{ m.timing }}）</li>{% endfor %}</ul>{% else %}未登録{% endif %}</dd>
+      <dt class="col-4">要介護度</dt><dd class="col-8">{{ e.care_level|default:"未登録" }}</dd>
+      <dt class="col-4">注意事項</dt><dd class="col-8" style="white-space: pre-line">{{ e.notes }}</dd>
+    </dl>
+  </div></div>
+</div></div>
+{% endblock %}
