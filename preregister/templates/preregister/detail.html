@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}事前登録の詳細 | みまもりケア{% endblock %}
+{% block title %}事前登録の詳細 | みまもりケアリングリング{% endblock %}
 {% block content %}
 <a class="btn btn-outline-secondary btn-sm mb-3" href="{% url 'preregister' %}"><i class="bi bi-arrow-left"></i> 戻る</a>
 <div class="row justify-content-center"><div class="col-lg-8">
@@ -14,6 +14,9 @@
       <dt class="col-4">要介護度</dt><dd class="col-8">{{ e.care_level|default:"未登録" }}</dd>
       <dt class="col-4">注意事項</dt><dd class="col-8" style="white-space: pre-line">{{ e.notes }}</dd>
     </dl>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-success" href="{% url 'preregister_edit' e.pk %}"><i class="bi bi-pencil"></i> 編集</a>
+    </div>
   </div></div>
 </div></div>
 {% endblock %}
