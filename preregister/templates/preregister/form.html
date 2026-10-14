@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}事前登録を追加 | みまもりケア{% endblock %}
+{% block content %}
+{% include "includes/back_button.html" with url=cancel_url %}
+<div class="row justify-content-center"><div class="col-lg-8">
+  <h1 class="h4 mb-1">事前登録を追加</h1>
+  <p class="text-muted">病院でもらった薬や、身体の状況を入力してください。</p>
+  <form method="post" class="card card-body shadow-sm">
+    {% csrf_token %}
+    <div class="mb-3"><label class="form-label" for="diagnosis">病名</label>
+      <input id="diagnosis" name="diagnosis" class="form-control form-control-lg" maxlength="50" value="{{ form.diagnosis.value|default:'' }}" placeholder="例: 高血圧"></div>
+    <div class="mb-3"><label class="form-label" for="hospital">病院</label>
+      <input id="hospital" name="hospital" class="form-control form-control-lg" maxlength="50" value="{{ form.hospital.value|default:'' }}" placeholder="例: みどり市立病院 内科"></div>
+    <div class="mb-3">
+      <label class="form-label">薬</label>
+      <div id="meds">
+        {% for m in form.med_rows %}
+        <div class="row g-2 mb-2 med-row">
+          <div class="col-7"><input name="med_name" class="form-control" maxlength="50" value="{{ m.name }}" placeholder="薬の名前" aria-label="薬の名前"></div>
+          <div class="col-4"><select name="med_timing" class="form-select" aria-label="飲むタイミング">{% for value, label in timing_choices %}<option{% if value == m.timing %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+          <div class="col-1"><button type="button" class="btn btn-outline-danger w-100 px-0 js-remove" aria-label="この薬を消す"><i class="bi bi-x-lg"></i></button></div>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" id="add-med" class="btn btn-outline-success btn-sm"><i class="bi bi-plus-circle"></i> 薬を追加</button>
+    </div>
+    <div class="mb-3"><label class="form-label" for="care_level">要介護度</label>
+      <select id="care_level" name="care_level" class="form-select form-select-lg">
+        {% for value, label in care_level_choices %}<option value="{{ value }}"{% if value == form.care_level.value|default:'' %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <div class="mb-3"><label class="form-label" for="notes">注意事項 <span class="badge text-bg-danger">必須</span></label>
+      <textarea id="notes" name="notes" class="form-control" rows="3" maxlength="500" placeholder="例: 塩分を控える" required>{{ form.notes.value|default:'' }}</textarea></div>
+    <div class="mb-3"><label class="form-label" for="condition">身体状況 <span class="badge text-bg-danger">必須</span></label>
+      <input id="condition" name="condition" class="form-control form-control-lg" maxlength="50" value="{{ form.condition.value|default:'' }}" placeholder="例: 歩くとふらつくことがある" required>
+      <div class="form-text">事前登録の一覧では、この内容が見出しになります。</div></div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-success btn-lg">登録する</button>
+      <a class="btn btn-outline-secondary btn-lg" href="{{ cancel_url }}">キャンセル</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}
+{% block script %}
+<script>
+const meds = document.getElementById('meds');
+const proto = meds.querySelector('.med-row').cloneNode(true);
+function clearRow(row) { row.querySelector('input').value = ''; }
+document.getElementById('add-med').onclick = () => {
+  const row = proto.cloneNode(true); clearRow(row); meds.appendChild(row); row.querySelector('input').focus();
+};
+meds.addEventListener('click', e => {
+  const btn = e.target.closest('.js-remove'); if (!btn) return;
+  const row = btn.closest('.med-row');
+  if (meds.querySelectorAll('.med-row').length > 1) row.remove(); else clearRow(row);
+});
+</script>
+{% endblock %}

@@ -3,8 +3,7 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
   <h1 class="h4 mb-0">事前登録</h1>
-  <a class="btn btn-success btn-sm" href="#"><i class="bi bi-plus-circle"></i> 登録する</a>
-</div>
+  <a class="btn btn-success btn-sm" href="{% url 'preregister_new' %}"><i class="bi bi-plus-circle"></i> 登録する</a></div>
 <p class="text-muted">身体の状況ごとに、病名・病院・薬・要介護度・注意事項を登録します。入所希望を送るときに、介護施設へ伝わります。</p>
 {% if entries %}
 <div class="list-group shadow-sm">
