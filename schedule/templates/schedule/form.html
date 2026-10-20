@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'new' %}予定を追加{% else %}予定を編集{% endif %} | みまもりケアリング{% endblock %}
+{% block content %}
+{% url 'schedule' as back %}{% include "includes/back_button.html" with url=back %}
+<div class="row justify-content-center"><div class="col-md-6">
+  <h1 class="h4 mb-3">{% if mode == 'new' %}予定を追加{% else %}予定を編集{% endif %}</h1>
+  <form method="post" class="card card-body shadow-sm">
+    {% csrf_token %}
+    <div class="mb-3"><label class="form-label" for="id_time">時刻 <span class="badge text-bg-danger">必須</span></label>
+      {{ form.time }}</div>
+    <div class="mb-3"><label class="form-label" for="title">予定内容 <span class="badge text-bg-danger">必須</span></label>
+      <input id="title" name="title" class="form-control form-control-lg" maxlength="50" value="{{ form.title.value|default:'' }}" placeholder="例: 朝の薬（血圧の薬）" required></div>
+    <div class="form-check form-switch fs-5 mb-3">
+      <input class="form-check-input" type="checkbox" role="switch" id="alert" name="alert"{% if form.alert.value %} checked{% endif %}>
+      <label class="form-check-label" for="alert">この予定をアラートで知らせる</label>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-success btn-lg">{% if mode == 'new' %}追加する{% else %}保存する{% endif %}</button>
+      <a class="btn btn-outline-secondary btn-lg" href="{% url 'schedule' %}">キャンセル</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

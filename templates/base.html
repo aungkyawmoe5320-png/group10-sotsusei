@@ -24,7 +24,8 @@
         {% else %}
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">ホーム</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'preregister' %}">事前登録</a></li>          <li class="nav-item"><span class="nav-link disabled">スケジュール（準備中）</span></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'preregister' %}">事前登録</a></li>          
+          <li class="nav-item"><a class="nav-link" href="{% url 'schedule' %}">スケジュール</a></li>
           <li class="nav-item"><span class="nav-link disabled">体調履歴（準備中）</span></li>
         </ul>
         {% endif %}

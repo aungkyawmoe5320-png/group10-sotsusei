@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}スケジュール | みまもりケアリング{% endblock %}
+{% block content %}
+{% url 'dashboard' as back %}{% include "includes/back_button.html" with url=back %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0">今日のスケジュール</h1>
+  <a class="btn btn-success btn-sm" href="{% url 'schedule_new' %}"><i class="bi bi-plus-circle"></i> 予定を追加</a>
+</div>
+{% if not alert_on %}
+<div class="alert alert-secondary"><i class="bi bi-bell-slash"></i> アラートはオフです。</div>
+{% endif %}
+{% if schedules %}
+<div class="list-group shadow-sm mb-3">
+  {% for s in schedules %}
+  <div class="list-group-item">
+    <div class="row align-items-center g-2">
+      <div class="col-12 col-md">
+        <div class="fs-5"><strong>{{ s.time|time:"H:i" }}</strong>　{{ s.title }}</div>
+        <div class="mt-1">
+          {% if alert_on and s.alert %}<span class="badge text-bg-warning fs-6"><i class="bi bi-bell"></i> アラートあり</span>
+          {% else %}<span class="badge text-bg-light border text-muted fs-6"><i class="bi bi-bell-slash"></i> アラートなし</span>{% endif %}
+        </div>
+      </div>
+      <div class="col-12 col-md-auto d-flex gap-2">
+        <a class="btn btn-sm btn-outline-success flex-fill" href="{% url 'schedule_edit' s.pk %}"><i class="bi bi-pencil"></i> 編集</a>
+        <form method="post" action="{% url 'schedule_delete' s.pk %}" class="flex-fill" data-confirm="予定「{{ s.title }}」を削除しますか？">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-trash"></i> 削除</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-secondary">予定はまだありません。「予定を追加」から入力してください。</div>
+{% endif %}
+{% endblock %}
