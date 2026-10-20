@@ -1,0 +1,21 @@
+@startuml 事前登録一覧
+
+    actor    一般ユーザー        as AC
+    boundary ホーム.html         as B1
+    control  urls.py             as C0
+    control  preregister_list    as C1
+    entity   事前登録            as E1
+    boundary list.html           as B2
+
+    AC -> B1 : 「事前登録」を押下する
+    B1 -> C0 : GET
+    C0 -> C1 : 起動()
+    C1 -> E1 : 参照()
+    C1 <-- E1 :
+    alt 事前登録が1件もない場合
+        C1 -> B2 : 「まだ登録がありません」\nとメッセージを表示する
+    else 事前登録がある場合
+        C1 -> B2 : 一覧を表示する
+    end
+
+@enduml

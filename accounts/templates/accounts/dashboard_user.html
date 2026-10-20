@@ -1,8 +1,17 @@
 {% extends "base.html" %}
+{% block title %}ホーム | みまもりケアリング{% endblock %}
 {% block content %}
 <h1 class="h4 mb-3">今日のようす</h1>
 <div class="card shadow-sm mb-4"><div class="card-body">
   <p class="mb-1">{{ user.name }} さん、ようこそ。</p>
   <p class="text-muted mb-0">スケジュール・体調履歴などの機能は、来週以降に順番に追加されます。</p>
 </div></div>
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3">
+  <div class="col"><div class="card text-center h-100 bg-body-secondary text-muted"><div class="card-body"><i class="bi bi-buildings display-6"></i><div class="mt-2">施設を探す</div><div class="small">準備中</div></div></div></div>
+  <div class="col"><a href="{% url 'preregister' %}" class="card text-decoration-none text-center h-100 shadow-sm"><div class="card-body"><i class="bi bi-clipboard2-pulse display-6 text-success"></i><div class="mt-2">事前登録</div></div></a></div>
+  <div class="col"><div class="card text-center h-100 bg-body-secondary text-muted"><div class="card-body"><i class="bi bi-calendar2-check display-6"></i><div class="mt-2">スケジュール</div><div class="small">準備中</div></div></div></div>
+  <div class="col"><div class="card text-center h-100 bg-body-secondary text-muted"><div class="card-body"><i class="bi bi-life-preserver display-6"></i><div class="mt-2">お困りサポート</div><div class="small">準備中</div></div></div></div>
+  <div class="col"><div class="card text-center h-100 bg-body-secondary text-muted"><div class="card-body"><i class="bi bi-journal-medical display-6"></i><div class="mt-2">体調履歴</div><div class="small">準備中</div></div></div></div>
+  <div class="col"><div class="card text-center h-100 bg-body-secondary text-muted"><div class="card-body"><i class="bi bi-bell display-6"></i><div class="mt-2">アラート設定</div><div class="small">準備中</div></div></div></div>
+</div>
 {% endblock %}
