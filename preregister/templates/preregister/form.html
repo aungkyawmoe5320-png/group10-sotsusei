@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if mode == 'new' %}事前登録を追加{% else %}事前登録を編集{% endif %} | みまもりケアリングリング{% endblock %}{% block content %}
+{% block title %}{% if mode == 'new' %}事前登録を追加{% else %}事前登録を編集{% endif %} | みまもりケアリング{% endblock %}{% block content %}
 {% include "includes/back_button.html" with url=cancel_url %}
 <div class="row justify-content-center"><div class="col-lg-8">
   <h1 class="h4 mb-1">{% if mode == 'new' %}事前登録を追加{% else %}事前登録を編集{% endif %}</h1>  <p class="text-muted">病院でもらった薬や、身体の状況を入力してください。</p>
