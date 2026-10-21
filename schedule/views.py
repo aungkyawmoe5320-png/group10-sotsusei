@@ -1,15 +1,17 @@
 from django.contrib import messages
+from django.db import transaction
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import user_required
 
-from .forms import ScheduleForm
+from .forms import AlertSettingForm, ScheduleForm
 from .models import AlertSetting, Schedule
 
 MSG_ADDED = "予定を追加しました。"
 MSG_UPDATED = "予定を更新しました。"
 MSG_DELETED = "予定「{title}」を削除しました。"
+MSG_ALERT_SAVED = "アラート設定を保存しました。"
 
 
 def _own_schedule(request, pk):
@@ -71,3 +73,25 @@ def schedule_delete(request, pk):
         schedule.delete()
         messages.info(request, MSG_DELETED.format(title=title))
     return redirect("schedule")
+
+
+@user_required
+def alert_settings(request):
+    setting, _ = AlertSetting.objects.get_or_create(user=request.user)
+    schedules = list(Schedule.objects.filter(user=request.user))
+    if request.method == "POST":
+        form = AlertSettingForm(request.POST, instance=setting)
+        if form.is_valid():
+            with transaction.atomic():
+                form.save()
+                for s in schedules:
+                    s.alert = f"item_{s.pk}" in request.POST
+                Schedule.objects.bulk_update(schedules, ["alert"])
+            messages.success(request, MSG_ALERT_SAVED)
+            return redirect("schedule")
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(request, error)
+    else:
+        form = AlertSettingForm(instance=setting)
+    return render(request, "schedule/alert_settings.html", {"form": form, "schedules": schedules})

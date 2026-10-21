@@ -4,10 +4,13 @@
 {% url 'dashboard' as back %}{% include "includes/back_button.html" with url=back %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <h1 class="h4 mb-0">今日のスケジュール</h1>
-  <a class="btn btn-success btn-sm" href="{% url 'schedule_new' %}"><i class="bi bi-plus-circle"></i> 予定を追加</a>
+  <div class="d-flex gap-2">
+    <a class="btn btn-success btn-sm" href="{% url 'schedule_new' %}"><i class="bi bi-plus-circle"></i> 予定を追加</a>
+    <a class="btn btn-outline-success btn-sm" href="{% url 'alert_settings' %}"><i class="bi bi-bell"></i> アラート設定</a>
+  </div>
 </div>
 {% if not alert_on %}
-<div class="alert alert-secondary"><i class="bi bi-bell-slash"></i> アラートはオフです。</div>
+<div class="alert alert-secondary"><i class="bi bi-bell-slash"></i> アラートはオフです。<a href="{% url 'alert_settings' %}">設定を変更</a></div>
 {% endif %}
 {% if schedules %}
 <div class="list-group shadow-sm mb-3">

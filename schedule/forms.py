@@ -1,3 +1,5 @@
+from .models import AlertSetting, Schedule
+
 from django import forms
 
 from .models import Schedule
@@ -38,3 +40,16 @@ class ScheduleForm(forms.ModelForm):
         if commit:
             schedule.save()
         return schedule
+
+class AlertSettingForm(forms.ModelForm):
+    class Meta:
+        model = AlertSetting
+        fields = ["enabled", "timing", "use_sound", "use_vibration", "use_screen", "renotify"]
+        widgets = {
+            "enabled": forms.CheckboxInput(attrs={"class": "form-check-input", "role": "switch"}),
+            "timing": forms.Select(attrs={"class": "form-select form-select-lg"}),
+            "use_sound": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "use_vibration": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "use_screen": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "renotify": forms.Select(attrs={"class": "form-select form-select-lg"}),
+        }

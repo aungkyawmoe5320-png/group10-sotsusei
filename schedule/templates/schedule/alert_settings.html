@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}アラート設定 | みまもりケアリング{% endblock %}
+{% block content %}
+{% url 'dashboard' as back %}{% include "includes/back_button.html" with url=back %}
+<h1 class="h4 mb-3">アラート設定</h1>
+<form method="post">
+  {% csrf_token %}
+  <div class="card shadow-sm mb-3"><div class="card-body">
+    <div class="form-check form-switch fs-5">
+      {{ form.enabled }}
+      <label class="form-check-label" for="{{ form.enabled.id_for_label }}">アラートを使う</label>
+    </div>
+    <div class="form-text">オフにすると、すべての予定で通知されません。</div>
+  </div></div>
+
+  <div class="card shadow-sm mb-3"><div class="card-body">
+    <h2 class="h6">いつ知らせますか</h2>
+    <div class="mb-3">{{ form.timing }}</div>
+    <h2 class="h6">どうやって知らせますか</h2>
+    <div class="form-check fs-5">{{ form.use_sound }}<label class="form-check-label" for="{{ form.use_sound.id_for_label }}">音</label></div>
+    <div class="form-check fs-5">{{ form.use_vibration }}<label class="form-check-label" for="{{ form.use_vibration.id_for_label }}">バイブレーション</label></div>
+    <div class="form-check fs-5">{{ form.use_screen }}<label class="form-check-label" for="{{ form.use_screen.id_for_label }}">画面に表示</label></div>
+    <h2 class="h6 mt-3">対応しなかったとき</h2>
+    {{ form.renotify }}
+  </div></div>
+
+  <div class="card shadow-sm mb-3"><div class="card-body">
+    <h2 class="h6">予定ごとのアラート</h2>
+    {% for s in schedules %}
+    <div class="form-check form-switch fs-5 py-1">
+      <input class="form-check-input" type="checkbox" role="switch" id="item_{{ s.pk }}" name="item_{{ s.pk }}"{% if s.alert %} checked{% endif %}>
+      <label class="form-check-label" for="item_{{ s.pk }}"><strong>{{ s.time|time:"H:i" }}</strong>　{{ s.title }}</label>
+    </div>
+    {% empty %}
+    <p class="text-muted mb-0">予定がまだありません。<a href="{% url 'schedule_new' %}">予定を追加する</a></p>
+    {% endfor %}
+  </div></div>
+
+  <div class="d-flex gap-2">
+    <button class="btn btn-success btn-lg">保存する</button>
+    <a class="btn btn-outline-secondary btn-lg" href="{% url 'schedule' %}">キャンセル</a>
+  </div>
+</form>
+{% endblock %}
