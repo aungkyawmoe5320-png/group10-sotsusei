@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}アラート設定 | みまもりケアリング{% endblock %}
 {% block content %}
 {% url 'dashboard' as back %}{% include "includes/back_button.html" with url=back %}
@@ -41,4 +42,81 @@
     <a class="btn btn-outline-secondary btn-lg" href="{% url 'schedule' %}">キャンセル</a>
   </div>
 </form>
+
+<div class="card p-3 mt-4">
+  <h2 class="h5">プッシュ通知(アプリを閉じていても通知)</h2>
+  <p id="push-status" class="text-muted mb-2">まだ有効になっていません。</p>
+  <button type="button" id="push-enable" class="btn btn-outline-success"
+          data-key="{{ vapid_public_key }}">通知を有効にする</button>
+</div>
+
+<script>
+  const btn = document.getElementById("push-enable");
+  const statusEl = document.getElementById("push-status");
+
+  // The public key is base64url text; the browser wants raw bytes
+  function urlBase64ToUint8Array(b64) {
+    const padding = "=".repeat((4 - (b64.length % 4)) % 4);
+    const base64 = (b64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64);
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+  }
+
+  // Wait until this registration's worker is active.
+  // (navigator.serviceWorker.ready would hang: our worker's folder doesn't cover this page.)
+  async function waitForActive(reg) {
+    const worker = reg.installing || reg.waiting || reg.active;
+    if (worker.state === "activated") return reg;
+    await new Promise((resolve) => {
+      worker.addEventListener("statechange", () => {
+        if (worker.state === "activated") resolve();
+      });
+    });
+    return reg;
+  }
+
+  btn.addEventListener("click", async () => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      statusEl.textContent = "このブラウザは通知に対応していません(HTTPSが必要です)。";
+      return;
+    }
+    if (!btn.dataset.key) {
+      statusEl.textContent = "サーバーに通知用の鍵が設定されていません。";
+      return;
+    }
+    btn.disabled = true;  // ignore extra clicks while we work
+
+    // 1) Ask the user for permission
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      statusEl.textContent = "通知が許可されませんでした。";
+      btn.disabled = false;
+      return;
+    }
+    try {
+      // 2) Register the service worker and wait until it is active
+      const reg = await navigator.serviceWorker.register("{% static 'schedule/sw.js' %}");
+      await waitForActive(reg);
+
+      // 3) Ask the browser's push service for our inbox address (signed with our public key)
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(btn.dataset.key),
+      });
+
+      // 4) Send it to our server (POST needs the CSRF token)
+      const csrf = document.querySelector("[name=csrfmiddlewaretoken]").value;
+      const res = await fetch("{% url 'push_subscribe' %}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+        body: JSON.stringify(sub),
+      });
+      statusEl.textContent = res.ok ? "通知を有効にしました。" : "保存に失敗しました。";
+    } catch (err) {
+      statusEl.textContent = "エラー: " + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
 {% endblock %}

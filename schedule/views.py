@@ -1,3 +1,8 @@
+import json
+
+from django.http import JsonResponse
+from django.conf import settings as django_settings
+from .models import PushSubscription
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect, render
@@ -94,4 +99,27 @@ def alert_settings(request):
                 messages.error(request, error)
     else:
         form = AlertSettingForm(instance=setting)
-    return render(request, "schedule/alert_settings.html", {"form": form, "schedules": schedules})
+    return render(request, "schedule/alert_settings.html", {
+        "form": form,
+        "schedules": schedules,
+        "vapid_public_key": django_settings.VAPID_PUBLIC_KEY,
+    })
+@user_required
+@require_POST
+def push_subscribe(request):
+    """ブラウザから届いた通知の送り先を保存する"""
+    try:
+        data = json.loads(request.body)
+        endpoint = data["endpoint"]
+        p256dh = data["keys"]["p256dh"]
+        auth = data["keys"]["auth"]
+    except (ValueError, KeyError, TypeError):
+        # Broken or missing data: tell the browser "bad request" (400)
+        return JsonResponse({"ok": False}, status=400)
+
+    # If this device is already saved, update it; otherwise create it
+    PushSubscription.objects.update_or_create(
+        endpoint=endpoint,
+        defaults={"user": request.user, "p256dh": p256dh, "auth": auth},
+    )
+    return JsonResponse({"ok": True})
