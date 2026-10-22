@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+import datetime
+
 
 class Schedule(models.Model):
     """ スケジュール(毎日の予定を1件ずつ登録する)。 """
@@ -92,18 +94,23 @@ class PushSubscription(models.Model):
 
 
 class PushLog(models.Model):
-    """その日、その予定の通知を送ったか(二重送信を防ぐための記録)"""
+    """その日、その予定(その時刻)の通知を送ったか(二重送信を防ぐための記録)"""
 
     schedule = models.ForeignKey(
         Schedule, on_delete=models.CASCADE, related_name="push_logs"
     )
     date = models.DateField("送った日")
+    # The schedule time this log was made for. If the user edits the time,
+    # the new time is a different alert and may fire again.
+    time = models.TimeField("予定時刻", default=datetime.time(0, 0))
     sent_at = models.DateTimeField("送信日時", auto_now_add=True)
+    acknowledged = models.BooleanField("確認済み", default=False)
+    renotified = models.BooleanField("再通知済み", default=False)
 
     class Meta:
         constraints = [
-            # Same schedule on the same day can only be logged once
             models.UniqueConstraint(
-                fields=["schedule", "date"], name="unique_push_per_schedule_day"
+                fields=["schedule", "date", "time"],
+                name="unique_push_per_schedule_day_time",
             ),
         ]

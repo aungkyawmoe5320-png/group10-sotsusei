@@ -53,6 +53,7 @@
 <script>
   const btn = document.getElementById("push-enable");
   const statusEl = document.getElementById("push-status");
+  const SW_URL = "{% static 'schedule/sw.js' %}";
 
   // The public key is base64url text; the browser wants raw bytes
   function urlBase64ToUint8Array(b64) {
@@ -75,11 +76,44 @@
     return reg;
   }
 
-  btn.addEventListener("click", async () => {
+  // Send the subscription to our server (safe to repeat: the server updates, not duplicates)
+  async function saveSubscription(sub) {
+    const csrf = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    return fetch("{% url 'push_subscribe' %}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+      body: JSON.stringify(sub),
+    });
+  }
+
+  // On page load: ask the browser what the REAL state is, instead of always saying "not enabled"
+  async function refreshState() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       statusEl.textContent = "このブラウザは通知に対応していません(HTTPSが必要です)。";
+      btn.disabled = true;
       return;
     }
+    if (Notification.permission === "denied") {
+      statusEl.textContent = "通知がブロックされています。ブラウザの設定でこのサイトの通知を許可してください。";
+      return;
+    }
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      const reg = regs.find((r) => r.active && r.active.scriptURL.includes("/static/schedule/sw.js"));
+      const sub = reg ? await reg.pushManager.getSubscription() : null;
+      if (sub && Notification.permission === "granted") {
+        await saveSubscription(sub);  // make sure our server has it too
+        statusEl.textContent = "この端末では通知が有効です。";
+        btn.textContent = "通知を有効にしなおす";
+        return;
+      }
+    } catch (err) {
+      // fall through to "not enabled"
+    }
+    statusEl.textContent = "まだ有効になっていません。";
+  }
+
+  btn.addEventListener("click", async () => {
     if (!btn.dataset.key) {
       statusEl.textContent = "サーバーに通知用の鍵が設定されていません。";
       return;
@@ -95,7 +129,7 @@
     }
     try {
       // 2) Register the service worker and wait until it is active
-      const reg = await navigator.serviceWorker.register("{% static 'schedule/sw.js' %}");
+      const reg = await navigator.serviceWorker.register(SW_URL);
       await waitForActive(reg);
 
       // 3) Ask the browser's push service for our inbox address (signed with our public key)
@@ -104,19 +138,17 @@
         applicationServerKey: urlBase64ToUint8Array(btn.dataset.key),
       });
 
-      // 4) Send it to our server (POST needs the CSRF token)
-      const csrf = document.querySelector("[name=csrfmiddlewaretoken]").value;
-      const res = await fetch("{% url 'push_subscribe' %}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
-        body: JSON.stringify(sub),
-      });
+      // 4) Send it to our server
+      const res = await saveSubscription(sub);
       statusEl.textContent = res.ok ? "通知を有効にしました。" : "保存に失敗しました。";
+      if (res.ok) btn.textContent = "通知を有効にしなおす";
     } catch (err) {
       statusEl.textContent = "エラー: " + err.message;
     } finally {
       btn.disabled = false;
     }
   });
+
+  refreshState();
 </script>
 {% endblock %}

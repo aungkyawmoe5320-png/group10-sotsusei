@@ -1,5 +1,5 @@
 import json
-
+from .models import AlertSetting, PushLog, PushSubscription, Schedule
 from django.http import JsonResponse
 from django.conf import settings as django_settings
 from .models import PushSubscription
@@ -32,6 +32,13 @@ def _form_page(request, form, mode):
 
 @user_required
 def schedule_list(request):
+    # Opened from a notification (?ack=<id>): mark that alert as acknowledged.
+    # Filtering by the user keeps people from touching each other's logs.
+    ack = request.GET.get("ack")
+    if ack and ack.isdigit():
+        PushLog.objects.filter(pk=int(ack), schedule__user=request.user).update(
+            acknowledged=True
+        )
     schedules = Schedule.objects.filter(user=request.user)
     alert_setting, _ = AlertSetting.objects.get_or_create(user=request.user)
     return render(request, "schedule/list.html", {
