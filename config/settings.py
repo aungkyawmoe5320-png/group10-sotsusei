@@ -103,3 +103,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Bootstrap uses "danger" for errors; Django calls it "error".
 MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
+
+
+# --- Web Push (VAPID) ---
+# Secrets are NOT written in the code. They come from environment variables,
+# so they never end up in git.
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+# Contact address sent to the push service. Change it to the team's address if you like.
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:group10@example.com")

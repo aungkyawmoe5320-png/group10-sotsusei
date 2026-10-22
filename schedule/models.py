@@ -66,3 +66,26 @@ class AlertSetting(models.Model):
 
     def __str__(self):
         return f"{self.user} のアラート設定"
+
+
+
+class PushSubscription(models.Model):
+    """プッシュ通知の送り先(ユーザーの端末ごとに1件)"""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="登録した人",
+        on_delete=models.CASCADE,
+        related_name="push_subscriptions",
+    )
+    endpoint = models.TextField("送信先URL", unique=True)
+    p256dh = models.CharField("暗号化用の公開鍵", max_length=255)
+    auth = models.CharField("認証キー", max_length=255)
+    created_at = models.DateTimeField("登録日時", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "プッシュ通知の送り先"
+        verbose_name_plural = "プッシュ通知の送り先"
+
+    def __str__(self):
+        return f"{self.user} ({self.endpoint[:30]}...)"
