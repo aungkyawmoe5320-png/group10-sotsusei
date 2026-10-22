@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+
 class Schedule(models.Model):
     """ スケジュール(毎日の予定を1件ずつ登録する)。 """
 
@@ -20,7 +21,7 @@ class Schedule(models.Model):
         ordering = ["time", "id"]
 
     def __str__(self):
-        return f"{self.time:%H:M%} {self.title}"
+        return f"{self.time:%H:%M} {self.title}"
 
 
 class AlertTiming(models.IntegerChoices):
@@ -68,7 +69,6 @@ class AlertSetting(models.Model):
         return f"{self.user} のアラート設定"
 
 
-
 class PushSubscription(models.Model):
     """プッシュ通知の送り先(ユーザーの端末ごとに1件)"""
 
@@ -89,3 +89,21 @@ class PushSubscription(models.Model):
 
     def __str__(self):
         return f"{self.user} ({self.endpoint[:30]}...)"
+
+
+class PushLog(models.Model):
+    """その日、その予定の通知を送ったか(二重送信を防ぐための記録)"""
+
+    schedule = models.ForeignKey(
+        Schedule, on_delete=models.CASCADE, related_name="push_logs"
+    )
+    date = models.DateField("送った日")
+    sent_at = models.DateTimeField("送信日時", auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            # Same schedule on the same day can only be logged once
+            models.UniqueConstraint(
+                fields=["schedule", "date"], name="unique_push_per_schedule_day"
+            ),
+        ]

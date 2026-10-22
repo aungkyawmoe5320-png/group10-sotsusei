@@ -13,7 +13,8 @@ self.addEventListener("push", (event) => {
   const options = {
     body: data.body || "予定の時間です",
     tag: data.tag,                       // same tag = replace the old notification
-    vibrate: data.vibrate || undefined,  // e.g. [200, 100, 200] (Android only)
+    vibrate: data.vibrate || undefined,  // e.g. [300, 150, 300] (Android only)
+    silent: data.silent === true,        // true = no sound, no vibration
     data: { url: data.url || "/schedule/" },
   };
 
