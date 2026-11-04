@@ -1,0 +1,19 @@
+<div class="card shadow border-secondary-subtle">
+  <div class="card-body p-4 p-md-5">
+    <div class="text-center border-bottom pb-3 mb-4">
+      <div class="small text-muted">みまもりケアリンク</div>
+      <h2 class="h4 mb-1">{{ pdf }}</h2>
+      <div class="small text-muted">最終更新日 {{ pdf.updated_at|date:"Y-m-d" }}</div>
+    </div>
+    {% for s in sections %}
+    <section class="mb-4">
+      <h3 class="h6 border-start border-4 border-success ps-2">{{ s.heading }}</h3>
+      {% if s.text %}<p class="mb-1 text-body-secondary">{{ s.text }}</p>{% endif %}
+      {% if s.details %}<ul class="mb-0 small">{% for d in s.details %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
+    </section>
+    {% empty %}
+    <p class="text-muted">表示できる内容がありません。</p>
+    {% endfor %}
+    {% if signature %}<div class="small text-muted text-end">署名: {{ signature }}</div>{% endif %}
+  </div>
+</div>

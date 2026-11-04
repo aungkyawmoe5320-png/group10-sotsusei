@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}AIまとめPDF | みまもりケアリンク{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8">
+  <h1 class="h4 mb-1"><i class="bi bi-file-earmark-pdf text-success"></i> AIまとめPDF</h1>
+  <p class="text-muted">{{ user.name }}さんの登録情報から、必要な情報を選んで、PDFにまとめます。PDFは1人につき1つで、作成したあとは、同じPDFを更新します。</p>
+
+  <div class="card shadow-sm mb-4"><div class="card-body">
+    <h2 class="h6 mb-1">まとめる項目を選ぶ</h2>
+    <p class="small text-muted">ここで選んだ範囲の情報だけを、PDFに使います。</p>
+    <form method="post" action="{% url 'summary_save' %}">
+      {% csrf_token %}
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="basic" id="item-basic" {% if form.basic %}checked{% endif %}>
+        <label class="form-check-label" for="item-basic">基本情報<span class="d-block small text-muted">氏名・メールアドレス</span></label>
+      </div>
+
+      <div class="mb-3">
+        <div class="fw-bold small mb-1">事前登録<span class="fw-normal text-muted">（身体の状況ごとに選べます）</span></div>
+        {% for e in prereg %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="prereg" value="{{ e.id }}" id="item-prereg-{{ e.id }}" {% if e.id in form.prereg %}checked{% endif %}>
+          <label class="form-check-label" for="item-prereg-{{ e.id }}">{{ e.condition }}<span class="d-block small text-muted">{% if e.diagnosis %}病名: {{ e.diagnosis }}　／　{% endif %}薬: {{ e.medications.all|length }}件</span></label>
+        </div>
+        {% empty %}
+        <div class="small text-muted">まだ事前登録がありません。</div>
+        {% endfor %}
+      </div>
+
+      <div class="form-check mb-4">
+        <input class="form-check-input" type="checkbox" name="schedule" id="item-schedule" {% if form.schedule %}checked{% endif %}>
+        <label class="form-check-label" for="item-schedule">スケジュール<span class="d-block small text-muted">登録している予定 {{ schedule_count }} 件</span></label>
+      </div>
+
+      <button class="btn btn-success btn-lg"><i class="bi bi-stars"></i> アンケートに進む</button>
+    </form>
+  </div></div>
+
+  <div class="card shadow-sm"><div class="card-header">いまのPDF</div>
+    {% if pdf %}
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <span><i class="bi bi-file-earmark-pdf text-danger"></i> {{ pdf }}<span class="d-block small text-muted">作成日 {{ pdf.created_at|date:"Y-m-d" }}　／　最終更新日 {{ pdf.updated_at|date:"Y-m-d" }}</span></span>
+      <a class="btn btn-sm btn-outline-success" href="{% url 'summary_detail' %}">開く</a>
+    </div>
+    {% else %}
+    <div class="card-body text-muted">まだPDFはありません。項目を選んで「PDFを作成する」を押すと、ここに表示されます。</div>
+    {% endif %}
+  </div>
+</div></div>
+{% endblock %}
