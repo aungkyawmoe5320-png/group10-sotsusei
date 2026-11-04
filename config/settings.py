@@ -1,5 +1,5 @@
 """
-Django settings for config project (グループ10 卒業制作 / みまもりケアリング).
+Django settings for config project (グループ10 卒業制作 / みまもりケアリンク).
 
 Secrets and server-specific values come from environment variables,
 so nothing sensitive is stored in this public repository.
@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'preregister',
+    'schedule',
 ]
 
 MIDDLEWARE = [
@@ -102,3 +103,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Bootstrap uses "danger" for errors; Django calls it "error".
 MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
+
+
+# --- Web Push (VAPID) ---
+# Secrets are NOT written in the code. They come from environment variables,
+# so they never end up in git.
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+# Contact address sent to the push service. Change it to the team's address if you like.
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:group10@example.com")
+
+# Allow logins and forms through the Cloudflare quick-tunnel HTTPS address.
+# The "*" matches the random name that changes on every tunnel start.
+CSRF_TRUSTED_ORIGINS = ["https://*.trycloudflare.com"]

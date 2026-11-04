@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}アラート設定 | みまもりケアリンク{% endblock %}
+{% block content %}
+{% url 'dashboard' as back %}{% include "includes/back_button.html" with url=back %}
+<h1 class="h4 mb-3">アラート設定</h1>
+<form method="post">
+  {% csrf_token %}
+  <div class="card shadow-sm mb-3"><div class="card-body">
+    <div class="form-check form-switch fs-5">
+      {{ form.enabled }}
+      <label class="form-check-label" for="{{ form.enabled.id_for_label }}">アラートを使う</label>
+    </div>
+    <div class="form-text">オフにすると、すべての予定で通知されません。</div>
+  </div></div>
+
+  <div class="card shadow-sm mb-3"><div class="card-body">
+    <h2 class="h6">いつ知らせますか</h2>
+    <div class="mb-3">{{ form.timing }}</div>
+    <h2 class="h6">どうやって知らせますか</h2>
+    <div class="form-check fs-5">{{ form.use_sound }}<label class="form-check-label" for="{{ form.use_sound.id_for_label }}">音</label></div>
+    <div class="form-check fs-5">{{ form.use_vibration }}<label class="form-check-label" for="{{ form.use_vibration.id_for_label }}">バイブレーション</label></div>
+    <div class="form-check fs-5">{{ form.use_screen }}<label class="form-check-label" for="{{ form.use_screen.id_for_label }}">画面に表示</label></div>
+    <h2 class="h6 mt-3">対応しなかったとき</h2>
+    {{ form.renotify }}
+  </div></div>
+
+  <div class="card shadow-sm mb-3"><div class="card-body">
+    <h2 class="h6">予定ごとのアラート</h2>
+    {% for s in schedules %}
+    <div class="form-check form-switch fs-5 py-1">
+      <input class="form-check-input" type="checkbox" role="switch" id="item_{{ s.pk }}" name="item_{{ s.pk }}"{% if s.alert %} checked{% endif %}>
+      <label class="form-check-label" for="item_{{ s.pk }}"><strong>{{ s.time|time:"H:i" }}</strong>　{{ s.title }}</label>
+    </div>
+    {% empty %}
+    <p class="text-muted mb-0">予定がまだありません。<a href="{% url 'schedule_new' %}">予定を追加する</a></p>
+    {% endfor %}
+  </div></div>
+
+  <div class="d-flex gap-2">
+    <button class="btn btn-success btn-lg">保存する</button>
+    <a class="btn btn-outline-secondary btn-lg" href="{% url 'schedule' %}">キャンセル</a>
+  </div>
+</form>
+
+<div class="card p-3 mt-4">
+  <h2 class="h5">プッシュ通知(アプリを閉じていても通知)</h2>
+  <p id="push-status" class="text-muted mb-2">まだ有効になっていません。</p>
+  <button type="button" id="push-enable" class="btn btn-outline-success"
+          data-key="{{ vapid_public_key }}">通知を有効にする</button>
+</div>
+
+<script>
+  const btn = document.getElementById("push-enable");
+  const statusEl = document.getElementById("push-status");
+  const SW_URL = "{% static 'schedule/sw.js' %}";
+
+  // The public key is base64url text; the browser wants raw bytes
+  function urlBase64ToUint8Array(b64) {
+    const padding = "=".repeat((4 - (b64.length % 4)) % 4);
+    const base64 = (b64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64);
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+  }
+
+  // Wait until this registration's worker is active.
+  // (navigator.serviceWorker.ready would hang: our worker's folder doesn't cover this page.)
+  async function waitForActive(reg) {
+    const worker = reg.installing || reg.waiting || reg.active;
+    if (worker.state === "activated") return reg;
+    await new Promise((resolve) => {
+      worker.addEventListener("statechange", () => {
+        if (worker.state === "activated") resolve();
+      });
+    });
+    return reg;
+  }
+
+  // Send the subscription to our server (safe to repeat: the server updates, not duplicates)
+  async function saveSubscription(sub) {
+    const csrf = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    return fetch("{% url 'push_subscribe' %}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+      body: JSON.stringify(sub),
+    });
+  }
+
+  // On page load: ask the browser what the REAL state is, instead of always saying "not enabled"
+  async function refreshState() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      statusEl.textContent = "このブラウザは通知に対応していません(HTTPSが必要です)。";
+      btn.disabled = true;
+      return;
+    }
+    if (Notification.permission === "denied") {
+      statusEl.textContent = "通知がブロックされています。ブラウザの設定でこのサイトの通知を許可してください。";
+      return;
+    }
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      const reg = regs.find((r) => r.active && r.active.scriptURL.includes("/static/schedule/sw.js"));
+      const sub = reg ? await reg.pushManager.getSubscription() : null;
+      if (sub && Notification.permission === "granted") {
+        await saveSubscription(sub);  // make sure our server has it too
+        statusEl.textContent = "この端末では通知が有効です。";
+        btn.textContent = "通知を有効にしなおす";
+        return;
+      }
+    } catch (err) {
+      // fall through to "not enabled"
+    }
+    statusEl.textContent = "まだ有効になっていません。";
+  }
+
+  btn.addEventListener("click", async () => {
+    if (!btn.dataset.key) {
+      statusEl.textContent = "サーバーに通知用の鍵が設定されていません。";
+      return;
+    }
+    btn.disabled = true;  // ignore extra clicks while we work
+
+    // 1) Ask the user for permission
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      statusEl.textContent = "通知が許可されませんでした。";
+      btn.disabled = false;
+      return;
+    }
+    try {
+      // 2) Register the service worker and wait until it is active
+      const reg = await navigator.serviceWorker.register(SW_URL);
+      await waitForActive(reg);
+
+      // 3) Ask the browser's push service for our inbox address (signed with our public key)
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(btn.dataset.key),
+      });
+
+      // 4) Send it to our server
+      const res = await saveSubscription(sub);
+      statusEl.textContent = res.ok ? "通知を有効にしました。" : "保存に失敗しました。";
+      if (res.ok) btn.textContent = "通知を有効にしなおす";
+    } catch (err) {
+      statusEl.textContent = "エラー: " + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  refreshState();
+</script>
+{% endblock %}
