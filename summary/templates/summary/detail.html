@@ -1,12 +1,18 @@
 {% extends "base.html" %}
 {% block title %}{{ pdf }} | みまもりケアリンク{% endblock %}
 {% block content %}
+<style media="print">
+  /* 印刷（PDFに保存）のとき、メニュー・ボタン・メッセージ・削除の枠を隠して、PDFの用紙だけを出す */
+  nav, .navbar, .alert, .no-print, #delete-zone { display: none !important; }
+  body { background: #fff !important; }
+  .card { box-shadow: none !important; border: 0 !important; }
+</style>
 <div class="row justify-content-center"><div class="col-lg-8">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
     <h1 class="h4 mb-0"><i class="bi bi-file-earmark-pdf text-danger"></i> {{ pdf }}</h1>
-    <div class="d-flex flex-wrap gap-2">
+    <div class="d-flex flex-wrap gap-2 no-print">
       <a class="btn btn-outline-success btn-sm" href="{% url 'summary' %}"><i class="bi bi-sliders"></i> 項目を選び直して更新</a>
-      <a class="btn btn-primary btn-sm" href="{% url 'summary_download' %}"><i class="bi bi-download"></i> ダウンロード</a>
+      <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-download"></i> ダウンロード（PDFに保存）</button>
     </div>
   </div>
   <p class="text-muted small">作成日 {{ pdf.created_at|date:"Y-m-d" }}　／　最終更新日 {{ pdf.updated_at|date:"Y-m-d" }}</p>

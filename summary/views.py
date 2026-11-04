@@ -23,7 +23,7 @@ MSG_CREATED = "PDFを作成しました。"
 MSG_UPDATED = "PDFを更新しました。"
 MSG_DELETED = "PDFを削除しました。"
 MSG_DOWNLOAD = "PDFのダウンロードは準備中です（今回は表示のみです）。"
-
+PREFILL_SURVEY = True  # True: 更新のとき、前回の答えを入れた状態でアンケートを開く（同意と署名は毎回入れ直す）
 
 def _own_pdf(request):
     """ログイン中の本人のPDF。なければ None。"""
@@ -83,6 +83,10 @@ def summary_survey(request):  # ③ アンケート。答えたあとに、PDF�
         messages.warning(request, MSG_NEED_SELECT)
         return redirect("summary")
     answers = empty_survey()  # 最初は、何も入力・選択されていない状態
+    old = _own_pdf(request)
+    if PREFILL_SURVEY and old:
+        # 前回の答えを入れておく。同意と署名は、更新のたびに入れ直してもらう
+        answers = {**answers, **old.survey, "consent": False, "signature": ""}
     if request.method == "POST":
         answers = read_survey(request.POST)
         errors = survey_errors(answers)
