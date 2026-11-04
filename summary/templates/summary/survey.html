@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load summary_tags %}
+{% block title %}アンケート | みまもりケアリンク{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8">
+  <h1 class="h4 mb-1"><i class="bi bi-clipboard2-check text-success"></i> {{ user.name }}さんについてのアンケート</h1>
+  <p class="text-muted small">PDFをまとめるために、いくつか質問に答えてください。わからないときは「不明」を選んでください。<span class="badge text-bg-danger">必須</span> の項目と同意欄は、すべて答えると、PDFを作成できます。</p>
+
+  <form method="post" action="{% url 'summary_survey' %}" id="survey-form"{% if pdf %} onsubmit="return confirm('PDFを更新します。いまのPDFは、新しい内容に置き換わります。よろしいですか？');"{% endif %}>
+    {% csrf_token %}
+    {% for sec in sections %}
+    <div class="card shadow-sm mb-4"><div class="card-body">
+      <h2 class="h6 mb-3">{{ sec.mark }} {{ sec.title }}{% if sec.required %} <span class="badge text-bg-danger">必須</span>{% endif %}</h2>
+      {% for q in sec.questions %}
+      {% if q.type == "radio" or q.type == "checkbox" %}
+      <fieldset class="mb-3"{% if q.exclusive %} data-exclusive="{{ q.exclusive|join:',' }}"{% endif %}>
+        <legend class="fs-6 fw-bold mb-1">{{ q.label }}</legend>
+        {% for value, name in q.options %}
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="{{ q.type }}" name="{{ q.key }}" id="{{ q.key }}-{{ value }}" value="{{ value }}"
+                 {% if q.type == "checkbox" %}{% if value in form|get_item:q.key %}checked{% endif %}{% else %}{% if form|get_item:q.key == value %}checked{% endif %}{% endif %}>
+          <label class="form-check-label" for="{{ q.key }}-{{ value }}">{{ name }}</label>
+        </div>
+        {% endfor %}
+        {% if q.detail %}
+        <div class="mt-1"><label class="form-label small mb-0" for="{{ q.detail.key }}">{{ q.detail.label }}{% if q.detail.when %}（「その他」を選んだとき）{% endif %}</label>
+          <input class="form-control" type="text" name="{{ q.detail.key }}" id="{{ q.detail.key }}" maxlength="{{ q.detail.maxlen }}" value="{{ form|get_item:q.detail.key }}"></div>
+        {% endif %}
+      </fieldset>
+      {% elif q.type == "text" %}
+      <div class="mb-3"><label class="form-label fw-bold fs-6 mb-1" for="{{ q.key }}">{{ q.label }}</label>
+        <input class="form-control" type="text" name="{{ q.key }}" id="{{ q.key }}" maxlength="{{ q.maxlen }}" value="{{ form|get_item:q.key }}"></div>
+      {% else %}
+      <div class="mb-3"><label class="form-label fw-bold fs-6 mb-1" for="{{ q.key }}">{{ q.label }}</label>
+        {% if q.hint %}<div class="form-text mt-0 mb-1">{{ q.hint }}</div>{% endif %}
+        <textarea class="form-control" rows="3" name="{{ q.key }}" id="{{ q.key }}" maxlength="{{ q.maxlen }}">{{ form|get_item:q.key }}</textarea></div>
+      {% endif %}
+      {% endfor %}
+    </div></div>
+    {% endfor %}
+
+    <div class="card shadow-sm mb-4"><div class="card-body">
+      <h2 class="h6 mb-3">同意</h2>
+      <fieldset class="mb-3">
+        <legend class="fs-6 fw-bold mb-1">個人情報の使用範囲（当てはまるものすべて）</legend>
+        <div class="form-text mt-0 mb-1">このアンケートの、どの内容をPDFに使ってよいか、選んでください。</div>
+        {% for key, name in use_scopes %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="use_scope" id="use_scope-{{ key }}" value="{{ key }}" {% if key in form.use_scope %}checked{% endif %}>
+          <label class="form-check-label" for="use_scope-{{ key }}">{{ name }}</label>
+        </div>
+        {% endfor %}
+      </fieldset>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="consent" id="consent" {% if form.consent %}checked{% endif %}>
+        <label class="form-check-label" for="consent">{{ consent_label }}</label>
+      </div>
+      <label class="form-label small mb-0" for="signature">署名</label>
+      <input class="form-control" type="text" name="signature" id="signature" maxlength="30" value="{{ form.signature }}">
+    </div></div>
+
+    <div class="d-flex flex-wrap gap-2 mb-2">
+      <button class="btn btn-success btn-lg" id="submit-button"><i class="bi bi-stars"></i> {% if pdf %}PDFを更新する{% else %}PDFを作成する{% endif %}</button>
+      <a class="btn btn-outline-secondary btn-lg" href="{% url 'summary' %}">項目を選び直す</a>
+    </div>
+    <p class="small text-muted mb-4" id="consent-note">「同意」にチェックを入れると、ボタンを押せるようになります。</p>
+  </form>
+</div></div>
+<script>
+(function () {
+  // 「同意」にチェックを入れるまで、作成するボタンを押せなくする
+  var consent = document.getElementById('consent'), button = document.getElementById('submit-button'), note = document.getElementById('consent-note');
+  function syncConsent() { button.disabled = !consent.checked; note.hidden = consent.checked; }
+  consent.addEventListener('change', syncConsent);
+  syncConsent();
+  // 「なし」「不明」などは、ほかの選択肢と同時に選べない: 選んだら、ぶつかるほうのチェックを外す
+  document.querySelectorAll('fieldset[data-exclusive]').forEach(function (group) {
+    var exclusive = group.dataset.exclusive.split(',');
+    group.addEventListener('change', function (event) {
+      var picked = event.target;
+      if (picked.type !== 'checkbox' || !picked.checked) return;
+      group.querySelectorAll('input[type=checkbox]').forEach(function (other) {
+        if (other !== picked && (exclusive.indexOf(picked.value) >= 0 || exclusive.indexOf(other.value) >= 0)) other.checked = false;
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}
