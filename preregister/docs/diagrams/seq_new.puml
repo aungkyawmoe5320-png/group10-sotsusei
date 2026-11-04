@@ -1,0 +1,32 @@
+@startuml 事前登録
+
+    actor    一般ユーザー          as AC
+    boundary list.html             as B1
+    control  urls.py               as C0
+    control  preregister_new       as C1
+    boundary form.html             as B2
+    entity   事前登録              as E1
+    control  preregister_list      as C2
+
+    AC -> B1 : 「登録する」ボタンを押下する
+    B1 -> C0 : GET
+    C0 -> C1 : 起動()
+    C1 -> B2 : 入力画面を表示する
+    AC -> B2 : 内容を入力し\n「登録する」ボタンを押下する
+    B2 -> C0 : POST
+    C0 -> C1 : 起動()
+    alt 注意事項が未入力の場合
+        C1 -> B2 : 「注意事項を入力してください。」\nとメッセージを表示する
+    else 身体状況が未入力の場合
+        C1 -> B2 : 「身体状況を入力してください。」\nとメッセージを表示する
+    else 文字数が上限を超えている場合
+        C1 -> B2 : 「〇〇は50文字以内で入力してください。」\nとメッセージを表示する
+    else それ以外の場合
+        C1 -> E1 : 登録()
+        C1 <-- E1 :
+        C1 -> C0 : リダイレクト()
+        C0 -> C2 : 起動()
+        C2 -> B1 : 「事前登録を追加しました。」\nとメッセージを表示し\n一覧を表示する
+    end
+
+@enduml

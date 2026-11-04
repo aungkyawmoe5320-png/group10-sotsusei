@@ -1,0 +1,63 @@
+<mxfile host="Electron">
+  <diagram name="ページ-1" id="rgkcoeTFFfeWgbB4PzK1">
+    <mxGraphModel dx="1508" dy="1268" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="wQGySayHz9GPVsVMouSS-1" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="事前登録" vertex="1">
+          <mxGeometry height="178" width="260" x="390" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-2" parent="wQGySayHz9GPVsVMouSS-1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&lt;div&gt;- 登録した人 : ユーザーアカウント (FK)&lt;/div&gt;&lt;div&gt;- 病名 : String&lt;/div&gt;&lt;div&gt;- 病院 : String&lt;/div&gt;&lt;div&gt;- 要介護度 : String&lt;/div&gt;&lt;div&gt;- 注意事項 : String&lt;/div&gt;&lt;div&gt;- 身体状況 : String&lt;/div&gt;&lt;div&gt;- 登録日時 : DateTime&lt;/div&gt;&lt;div&gt;- 更新日時 : DateTime&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="144" width="260" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-3" parent="wQGySayHz9GPVsVMouSS-1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+          <mxGeometry height="8" width="260" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-4" edge="1" parent="1" source="wQGySayHz9GPVsVMouSS-7" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="wQGySayHz9GPVsVMouSS-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-5" connectable="0" parent="wQGySayHz9GPVsVMouSS-4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.7881" y="1" as="geometry">
+            <mxPoint x="2" y="-5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-6" connectable="0" parent="wQGySayHz9GPVsVMouSS-4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="0...*" vertex="1">
+          <mxGeometry relative="1" x="0.7166" y="1" as="geometry">
+            <mxPoint x="10" y="8" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-7" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="ユーザーアカウント" vertex="1">
+          <mxGeometry height="108" width="160" x="440" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-8" parent="wQGySayHz9GPVsVMouSS-7" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&lt;div&gt;- メールアドレス : String&lt;/div&gt;&lt;div&gt;- 氏名 : String&lt;/div&gt;&lt;div&gt;- 区分 : String&lt;/div&gt;&lt;div&gt;- 施設 : String&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="74" width="160" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-9" parent="wQGySayHz9GPVsVMouSS-7" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+          <mxGeometry height="8" width="160" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-10" edge="1" parent="1" source="wQGySayHz9GPVsVMouSS-13" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="wQGySayHz9GPVsVMouSS-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-11" connectable="0" parent="wQGySayHz9GPVsVMouSS-10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="1" vertex="1">
+          <mxGeometry relative="1" x="0.8599" y="-3" as="geometry">
+            <mxPoint y="-5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-12" connectable="0" parent="wQGySayHz9GPVsVMouSS-10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="0...*" vertex="1">
+          <mxGeometry relative="1" x="-0.4936" y="-2" as="geometry">
+            <mxPoint x="30" y="-6" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-13" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="薬" vertex="1">
+          <mxGeometry height="101" width="160" x="830" y="478.5" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-14" parent="wQGySayHz9GPVsVMouSS-13" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- 事前登録 : 事前登録 (FK)&lt;/div&gt;&lt;div&gt;- 薬の名前 : String&lt;/div&gt;&lt;div&gt;- 飲むタイミング : String&lt;/div&gt;" vertex="1">
+          <mxGeometry height="67" width="160" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="wQGySayHz9GPVsVMouSS-15" parent="wQGySayHz9GPVsVMouSS-13" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
+          <mxGeometry height="8" width="160" y="93" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
