@@ -9,7 +9,7 @@ self.addEventListener("push", (event) => {
     data = { body: event.data ? event.data.text() : "" };
   }
 
-  const title = data.title || "みまもりケアリング";
+  const title = data.title || "みまもりケアリンク";
   const options = {
     body: data.body || "予定の時間です",
     tag: data.tag,                       // same tag = replace the old notification

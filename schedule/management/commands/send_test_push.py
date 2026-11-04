@@ -16,7 +16,7 @@ class Command(BaseCommand):
             return
 
         payload = json.dumps({
-            "title": "みまもりケアリング",
+            "title": "みまもりケアリンク",
             "body": "テスト通知です。届いていれば成功!",
             "url": "/schedule/",
         })
