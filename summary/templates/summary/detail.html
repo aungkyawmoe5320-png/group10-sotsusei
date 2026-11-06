@@ -3,12 +3,12 @@
 {% block content %}
 <style media="print">
   /* 印刷（PDFに保存）のとき、メニュー・ボタン・メッセージ・削除の枠を隠して、PDFの用紙だけを出す */
-  nav, .navbar, .alert, .no-print, #delete-zone { display: none !important; }
+  nav, .navbar, .alert, .no-print, .btn, #delete-zone { display: none !important; }
   body { background: #fff !important; }
   .card { box-shadow: none !important; border: 0 !important; }
 </style>
 <div class="row justify-content-center"><div class="col-lg-8">
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+     {% url 'summary' as back %}{% include "includes/back_button.html" with url=back %}  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
     <h1 class="h4 mb-0"><i class="bi bi-file-earmark-pdf text-danger"></i> {{ pdf }}</h1>
     <div class="d-flex flex-wrap gap-2 no-print">
       <a class="btn btn-outline-success btn-sm" href="{% url 'summary' %}"><i class="bi bi-sliders"></i> 項目を選び直して更新</a>
