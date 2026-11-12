@@ -9,30 +9,26 @@ from .models import User
 
 
 def index(request):
-    """トップ画面。ログイン済みならホームへ。"""
+    """トップ画面。ログイン済みならホームへ、未ログインならログイン画面へ。"""
     if request.user.is_authenticated:
         return redirect("dashboard")
-    return render(request, "index.html")
+    return redirect("login")
 
 
-def login_view(request, role):
-    """ログイン画面。URLの role で一般ユーザー用・介護士用を切り替える。"""
-    if role not in User.Role.values:
-        return redirect("index")
-    form = RoleLoginForm(request.POST or None, role=role, request=request)
+def login_view(request):
+    """ログイン画面（一般ユーザー用の1つだけ）。"""
+    form = RoleLoginForm(request.POST or None, role="user", request=request)
     if request.method == "POST" and form.is_valid():
         login(request, form.user)
         return redirect("dashboard")
-    return render(request, "accounts/login.html", {"form": form, "target": role})
-
+    return render(request, "accounts/login.html", {"form": form})
 
 @require_POST
 def logout_view(request):
     """ログアウト（安全のため POST のみ受け付ける）。"""
     logout(request)
     messages.info(request, "ログアウトしました。")
-    return redirect("index")
-
+    return redirect("login")
 
 @login_required
 def dashboard(request):
@@ -48,7 +44,7 @@ def account_new(request):  # Create
     if request.method == "POST" and form.is_valid():
         user = form.save()
         messages.success(request, "アカウントを登録しました。ログインしてください。")
-        return redirect("login", role=user.role)
+        return redirect("login")
     return render(request, "accounts/account_form.html", {"form": form, "mode": "new"})
 
 
@@ -74,5 +70,5 @@ def account_delete(request):  # Delete
         logout(request)
         user.delete()
         messages.info(request, "アカウントを削除しました。")
-        return redirect("index")
+        return redirect("login")
     return render(request, "accounts/account_delete.html")

@@ -78,7 +78,10 @@ class AccountEditForm(BootstrapMixin, forms.ModelForm):
 class RoleLoginForm(BootstrapMixin, forms.Form):
     """ログイン。一般ユーザーと介護士で同じフォーム、介護士は施設IDも確認する。"""
 
-    email = forms.EmailField(label="メールアドレス")
+    email = forms.EmailField(
+        label="メールアドレス",
+        widget=forms.EmailInput(attrs={"placeholder": "example@city.jp"}),
+    )    
     facility_code = forms.CharField(label="施設ID", max_length=20, required=False)
     password = forms.CharField(label="パスワード", widget=forms.PasswordInput)
 
