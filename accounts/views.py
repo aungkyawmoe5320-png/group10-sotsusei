@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from .current import SESSION_KEY, get_current_recipient
 from .forms import AccountEditForm, CareRecipientForm, RoleLoginForm, SignUpForm
 from .models import User
 
@@ -20,7 +21,7 @@ def login_view(request):
     form = RoleLoginForm(request.POST or None, role="user", request=request)
     if request.method == "POST" and form.is_valid():
         login(request, form.user)
-        return redirect("dashboard")
+        return redirect("care_recipient_select")  # 要介護者を選ぶ（1人なら自動で選ばれる）
     return render(request, "accounts/login.html", {"form": form})
 
 
@@ -53,7 +54,11 @@ def account_new(request):  # Create
 
 @login_required
 def account_detail(request):  # Read
-    return render(request, "accounts/account_detail.html")
+    context = {
+        "recipients": list(request.user.recipients.all()),
+        "current": get_current_recipient(request),
+    }
+    return render(request, "accounts/account_detail.html", context)
 
 
 @login_required
@@ -116,3 +121,22 @@ def care_recipient_delete(request, pk):  # 要介護者の削除（1人だけの
     recipient.delete()
     messages.info(request, f"{name}さんを要介護者から削除しました。")
     return redirect("account_detail")
+
+
+@login_required
+def care_recipient_select(request):  # 要介護者の選択（ログイン後・アカウント画面からの切り替え）
+    recipients = list(request.user.recipients.all())
+    if not recipients:  # 要介護者がまだいないアカウント（以前に作ったもの）
+        return redirect("dashboard")
+    if request.method == "POST":
+        chosen = next((r for r in recipients if str(r.pk) == request.POST.get("recipient_id")), None)
+        if chosen:
+            request.session[SESSION_KEY] = chosen.pk
+            messages.success(request, f"{chosen.name}さんを選択しました。")
+            return redirect("dashboard")
+        messages.error(request, "要介護者を選んでください。")
+    elif len(recipients) == 1:  # 1人だけなら、選ぶ必要はない
+        request.session[SESSION_KEY] = recipients[0].pk
+        return redirect("dashboard")
+    context = {"recipients": recipients, "selected_id": request.session.get(SESSION_KEY)}
+    return render(request, "accounts/care_recipient_select.html", context)

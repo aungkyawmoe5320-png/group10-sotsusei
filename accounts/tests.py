@@ -67,7 +67,7 @@ class LoginTests(TestCase):
 
     def test_user_login_success(self):
         res = self.client.post(reverse("login"), {"email": "taro@example.jp", "password": PASSWORD})
-        self.assertRedirects(res, reverse("dashboard"))
+        self.assertRedirects(res, reverse("care_recipient_select"), fetch_redirect_response=False)
         self.assertContains(self.client.get(reverse("dashboard")), "今日のようす")
 
     def test_wrong_password_fails(self):
@@ -252,3 +252,62 @@ class CareRecipientEditDeleteTests(TestCase):
         res = self.client.get(self.edit_url(self.hanako))
         self.assertContains(res, "削除する")
         self.assertContains(res, "元に戻せません。よろしいですか？")
+
+class CareRecipientSelectTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email="taro@example.jp", password=PASSWORD, name="山田 太郎")
+        self.client.force_login(self.user)
+        self.hanako = CareRecipient.objects.create(user=self.user, name="山田 花子")
+
+    def add_jiro(self):
+        return CareRecipient.objects.create(user=self.user, name="山田 次郎")
+
+    def test_one_recipient_is_selected_automatically(self):
+        res = self.client.get(reverse("care_recipient_select"))
+        self.assertRedirects(res, reverse("dashboard"))
+        self.assertEqual(self.client.session["care_recipient_id"], self.hanako.pk)
+
+    def test_screen_lists_all_when_two_or_more(self):
+        self.add_jiro()
+        res = self.client.get(reverse("care_recipient_select"))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "山田 花子")
+        self.assertContains(res, "山田 次郎")
+
+    def test_choosing_stores_selection(self):
+        jiro = self.add_jiro()
+        res = self.client.post(reverse("care_recipient_select"), {"recipient_id": jiro.pk})
+        self.assertRedirects(res, reverse("dashboard"))
+        self.assertEqual(self.client.session["care_recipient_id"], jiro.pk)
+
+    def test_cannot_choose_other_accounts_recipient(self):
+        self.add_jiro()
+        other = User.objects.create_user(email="other@example.jp", password=PASSWORD, name="他の人")
+        theirs = CareRecipient.objects.create(user=other, name="佐藤 和子")
+        res = self.client.post(reverse("care_recipient_select"), {"recipient_id": theirs.pk})
+        self.assertEqual(res.status_code, 200)
+        self.assertNotIn("care_recipient_id", self.client.session)
+
+    def test_account_screen_shows_badge_and_switch_button(self):
+        jiro = self.add_jiro()
+        self.client.post(reverse("care_recipient_select"), {"recipient_id": jiro.pk})
+        html = self.client.get(reverse("account_detail")).content.decode()
+        self.assertEqual(html.count("選択中"), 1)
+        self.assertEqual(html.count(">切り替える</button>"), 1)
+
+    def test_no_switch_button_with_one_recipient(self):
+        html = self.client.get(reverse("account_detail")).content.decode()
+        self.assertEqual(html.count("選択中"), 1)
+        self.assertEqual(html.count(">切り替える</button>"), 0)
+
+    def test_deleting_selected_recipient_clears_selection(self):
+        jiro = self.add_jiro()
+        self.client.post(reverse("care_recipient_select"), {"recipient_id": jiro.pk})
+        self.client.post(reverse("care_recipient_delete", args=[jiro.pk]))
+        res = self.client.get(reverse("account_detail"))
+        self.assertContains(res, "山田 花子")
+        self.assertEqual(self.client.session["care_recipient_id"], self.hanako.pk)  # 1人だけ残ったので自動で選ばれる
+
+    def test_select_requires_login(self):
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse("care_recipient_select")).status_code, 302)
