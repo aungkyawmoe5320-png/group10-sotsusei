@@ -1,11 +1,15 @@
+import io
+
 from django.contrib import messages
+from django.http import FileResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import user_required
-
 from .content import build_sections
 from .models import SummaryPdf
+from .pdf import build_pdf
 from .survey_def import (
     SURVEY_CONSENT_LABEL,
     SURVEY_SECTIONS,
@@ -128,8 +132,14 @@ def summary_delete(request):  # ⑥ PDFを削除する（確認ダイアログ�
 
 
 @user_required
-def summary_download(request):  # ⑤ ダウンロード（今回は準備中の知らせだけ）
-    if _own_pdf(request) is None:
+def summary_download(request):  # ⑤ PDFファイルをダウンロードする
+    pdf = _own_pdf(request)
+    if pdf is None:
         return redirect("summary")
-    messages.info(request, MSG_DOWNLOAD)
-    return redirect("summary_detail")
+    data = build_pdf(
+       title=str(pdf),
+       updated=f"{timezone.localtime(pdf.updated_at):%Y-%m-%d}",  # 日本時間の日付にする
+       sections=build_sections(request.user, pdf),
+       signature=pdf.survey.get("signature", ""),
+    )
+    return FileResponse(io.BytesIO(data), as_attachment=True, filename=f"{pdf}.pdf", content_type="application/pdf")
