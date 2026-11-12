@@ -76,3 +76,33 @@ class User(AbstractUser):
     @property
     def is_caregiver(self):
         return self.role == self.Role.CAREGIVER
+
+
+    
+
+class CareRecipient(models.Model):
+    """要介護者（介護される人）。1つのアカウントに、複数人を登録できる。"""
+
+    RELATIONS = ["母", "父", "義母", "義父", "祖母", "祖父", "配偶者", "子", "きょうだい", "その他"]
+
+    user = models.ForeignKey(
+        User,
+        verbose_name="介護者",
+        on_delete=models.CASCADE,  # アカウントを削除したら、要介護者も一緒に削除する
+        related_name="recipients",
+    )
+    name = models.CharField("要介護者氏名", max_length=50)
+    age = models.PositiveSmallIntegerField("年齢", null=True, blank=True)
+    birthday = models.DateField("誕生日", null=True, blank=True)
+    relation = models.CharField(
+        "介護者との関係", max_length=10, blank=True, choices=[(r, r) for r in RELATIONS]
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "要介護者"
+        verbose_name_plural = "要介護者"
+        ordering = ["id"]
+
+    def __str__(self):
+        return self.name

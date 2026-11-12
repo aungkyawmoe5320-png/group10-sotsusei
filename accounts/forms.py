@@ -1,7 +1,23 @@
-from django import forms
-from django.contrib.auth import authenticate, password_validation
+import string
 
-from .models import Facility, User
+from django import forms
+from django.contrib.auth import authenticate
+
+from django.db import transaction
+
+from .models import CareRecipient, User
+
+PASSWORD_RULE_MESSAGE = "パスワードは16文字以上の英字、数字、記号を組み合わせてください。"
+
+
+def is_strong_password(password):
+    """16文字以上で、英字・数字・記号をすべて含むか。"""
+    return (
+        len(password) >= 16
+        and any(c in string.ascii_letters for c in password)
+        and any(c in string.digits for c in password)
+        and any(c in string.punctuation for c in password)
+    )
 
 
 class BootstrapMixin:
@@ -15,15 +31,19 @@ class BootstrapMixin:
 
 
 class SignUpForm(BootstrapMixin, forms.ModelForm):
-    """アカウント登録（Create）。介護士は施設IDが必須。"""
+    """アカウント登録（Create）。"""
 
-    facility_code = forms.CharField(label="施設ID（介護士のみ）", max_length=20, required=False)
+    name = forms.CharField(label="介護者氏名", max_length=50)
+    recipient_name = forms.CharField(
+        label="要介護者氏名",
+        max_length=50,
+        widget=forms.TextInput(attrs={"placeholder": "例: 山田 花子"}),
+    )
     password = forms.CharField(label="パスワード", widget=forms.PasswordInput)
 
     class Meta:
         model = User
-        fields = ["role", "name", "email"]
-        widgets = {"role": forms.RadioSelect}
+        fields = ["name", "email"]
 
     def clean_email(self):
         email = self.cleaned_data["email"].lower()
@@ -31,35 +51,20 @@ class SignUpForm(BootstrapMixin, forms.ModelForm):
             raise forms.ValidationError("このメールアドレスは既に登録されています。")
         return email
 
-    def clean(self):
-        cleaned = super().clean()
-        if cleaned.get("role") == User.Role.CAREGIVER:
-            code = (cleaned.get("facility_code") or "").strip()
-            if not code:
-                self.add_error("facility_code", "介護士は施設IDを入力してください。")
-            else:
-                try:
-                    cleaned["facility"] = Facility.objects.get(facility_code=code)
-                except Facility.DoesNotExist:
-                    self.add_error("facility_code", "この施設IDは登録されていません。")
-        password = cleaned.get("password")
-        if password:
-            # Djangoの基準（8文字以上、数字だけ不可など）でチェック
-            temp_user = User(email=cleaned.get("email", ""), name=cleaned.get("name", ""))
-            try:
-                password_validation.validate_password(password, temp_user)
-            except forms.ValidationError as e:
-                self.add_error("password", e)
-        return cleaned
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        if not is_strong_password(password):
+            raise forms.ValidationError(PASSWORD_RULE_MESSAGE)
+        return password
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password"])
-        user.facility = self.cleaned_data.get("facility") if user.is_caregiver else None
         if commit:
-            user.save()
+            with transaction.atomic():  # アカウントと要介護者は、両方できるか、両方できないか
+                user.save()
+                CareRecipient.objects.create(user=user, name=self.cleaned_data["recipient_name"])
         return user
-
 
 class AccountEditForm(BootstrapMixin, forms.ModelForm):
     """アカウント情報の編集（Update）。"""
@@ -67,6 +72,7 @@ class AccountEditForm(BootstrapMixin, forms.ModelForm):
     class Meta:
         model = User
         fields = ["name", "email"]
+        labels = {"name": "介護者氏名"}
 
     def clean_email(self):
         email = self.cleaned_data["email"].lower()
@@ -76,12 +82,12 @@ class AccountEditForm(BootstrapMixin, forms.ModelForm):
 
 
 class RoleLoginForm(BootstrapMixin, forms.Form):
-    """ログイン。一般ユーザーと介護士で同じフォーム、介護士は施設IDも確認する。"""
+    """ログイン。（介護士用の処理は、のちほど整理して取り除く）"""
 
     email = forms.EmailField(
         label="メールアドレス",
         widget=forms.EmailInput(attrs={"placeholder": "example@city.jp"}),
-    )    
+    )
     facility_code = forms.CharField(label="施設ID", max_length=20, required=False)
     password = forms.CharField(label="パスワード", widget=forms.PasswordInput)
 

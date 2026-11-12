@@ -43,10 +43,10 @@ def account_new(request):  # Create
     form = SignUpForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
-        messages.success(request, "アカウントを登録しました。ログインしてください。")
-        return redirect("login")
+        login(request, user)  # 登録したら、そのままログインする
+        messages.success(request, "アカウントを登録しました。")
+        return redirect("dashboard")
     return render(request, "accounts/account_form.html", {"form": form, "mode": "new"})
-
 
 @login_required
 def account_detail(request):  # Read
