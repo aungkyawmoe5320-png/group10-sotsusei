@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 
 class Facility(models.Model):
@@ -78,8 +79,6 @@ class User(AbstractUser):
         return self.role == self.Role.CAREGIVER
 
 
-    
-
 class CareRecipient(models.Model):
     """要介護者（介護される人）。1つのアカウントに、複数人を登録できる。"""
 
@@ -106,3 +105,12 @@ class CareRecipient(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def display_age(self):
+        """誕生日があれば誕生日から計算する。なければ、入力された年齢（未入力なら None）。"""
+        if self.birthday:
+            today = timezone.localdate()
+            had_birthday = (today.month, today.day) >= (self.birthday.month, self.birthday.day)
+            return today.year - self.birthday.year - (0 if had_birthday else 1)
+        return self.age

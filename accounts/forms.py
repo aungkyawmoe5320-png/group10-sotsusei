@@ -2,8 +2,8 @@ import string
 
 from django import forms
 from django.contrib.auth import authenticate
-
 from django.db import transaction
+from django.utils import timezone
 
 from .models import CareRecipient, User
 
@@ -31,7 +31,7 @@ class BootstrapMixin:
 
 
 class SignUpForm(BootstrapMixin, forms.ModelForm):
-    """アカウント登録（Create）。"""
+    """アカウント登録（Create）。1人目の要介護者もあわせて登録する。"""
 
     name = forms.CharField(label="介護者氏名", max_length=50)
     recipient_name = forms.CharField(
@@ -66,6 +66,7 @@ class SignUpForm(BootstrapMixin, forms.ModelForm):
                 CareRecipient.objects.create(user=user, name=self.cleaned_data["recipient_name"])
         return user
 
+
 class AccountEditForm(BootstrapMixin, forms.ModelForm):
     """アカウント情報の編集（Update）。"""
 
@@ -79,6 +80,83 @@ class AccountEditForm(BootstrapMixin, forms.ModelForm):
         if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("このメールアドレスは既に登録されています。")
         return email
+
+
+class CareRecipientForm(BootstrapMixin, forms.ModelForm):
+    """要介護者の追加・設定。"""
+
+    age = forms.IntegerField(
+        label="年齢",
+        required=False,
+        min_value=0,
+        max_value=130,
+        error_messages={
+            "invalid": "年齢は0〜130の数字で入力してください。",
+            "min_value": "年齢は0〜130の数字で入力してください。",
+            "max_value": "年齢は0〜130の数字で入力してください。",
+        },
+    )
+    birthday = forms.DateField(
+        label="誕生日",
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        error_messages={"invalid": "誕生日を正しく入力してください。"},
+    )
+    relation = forms.ChoiceField(
+        label="介護者との関係",
+        required=False,
+        choices=[("", "選択しない")] + [(r, r) for r in CareRecipient.RELATIONS],
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
+    class Meta:
+        model = CareRecipient
+        fields = ["name", "age", "birthday", "relation"]
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        self.fields["name"].widget.attrs.update(
+            {"class": "form-control form-control-lg", "placeholder": "例: 山田 次郎"}
+        )
+
+    def clean_name(self):
+        name = self.cleaned_data["name"].strip()
+        same_name = self.user.recipients.filter(name=name).exclude(pk=self.instance.pk)
+        if same_name.exists():
+            raise forms.ValidationError("同じ氏名の要介護者がすでに登録されています。")
+        return name
+
+    def clean_birthday(self):
+        birthday = self.cleaned_data.get("birthday")
+        if birthday:
+            today = timezone.localdate()
+            age = today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
+            if birthday > today or age > 130:
+                raise forms.ValidationError("誕生日を正しく入力してください。")
+        return birthday
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("birthday"):
+            cleaned["age"] = None  # 誕生日があれば、年齢は誕生日から自動で計算する
+        return cleaned
+
+    def save(self, commit=True):
+        recipient = super().save(commit=False)
+        recipient.user = self.user
+        if commit:
+            recipient.save()
+        return recipient
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        self.fields["name"].widget.attrs.update(
+            {"class": "form-control form-control-lg", "placeholder": "例: 山田 次郎"}
+        )
+        if self.instance.pk:  # 設定画面では、誕生日があれば計算した年齢を入れておく
+            self.initial["age"] = self.instance.display_age
 
 
 class RoleLoginForm(BootstrapMixin, forms.Form):
