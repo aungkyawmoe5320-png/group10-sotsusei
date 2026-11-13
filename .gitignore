@@ -224,3 +224,4 @@ staticfiles/
 
 
 out/
+db-backup-*.sqlite3
