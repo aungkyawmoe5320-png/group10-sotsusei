@@ -1,8 +1,6 @@
-from .models import AlertSetting, Schedule
-
 from django import forms
 
-from .models import Schedule
+from .models import AlertSetting, Schedule
 
 
 class ScheduleForm(forms.ModelForm):
@@ -26,9 +24,10 @@ class ScheduleForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user=None, care_recipient=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        self.care_recipient = care_recipient
 
     def error_list(self):
         return [str(e) for errors in self.errors.values() for e in errors]
@@ -37,9 +36,11 @@ class ScheduleForm(forms.ModelForm):
         schedule = super().save(commit=False)
         if schedule.pk is None:
             schedule.user = self.user
+            schedule.care_recipient = self.care_recipient
         if commit:
             schedule.save()
         return schedule
+
 
 class AlertSettingForm(forms.ModelForm):
     class Meta:
