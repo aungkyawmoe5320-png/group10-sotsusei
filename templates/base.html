@@ -15,7 +15,10 @@
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-dark bg-success">
   <div class="container">
-    <a class="navbar-brand" href="{% url 'index' %}"><i class="bi bi-heart-pulse"></i> みまもりケアリンク</a>
+    <div class="d-flex flex-column lh-sm py-1">
+      <a class="navbar-brand me-0" href="{% url 'index' %}"><i class="bi bi-heart-pulse"></i> みまもりケアリンク</a>
+      {% if current_recipient %}<small class="text-white fw-semibold">{{ current_recipient.name }}</small>{% endif %}
+    </div>    
     <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
     <div id="nav" class="collapse navbar-collapse">
       {% if user.is_authenticated %}
