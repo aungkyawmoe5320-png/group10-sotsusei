@@ -112,6 +112,46 @@ class AccountCrudTests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.name, "山田 次郎")
 
+    def post_edit(self, **overrides):
+        data = {"name": "山田 太郎", "email": "taro@example.jp", "phone": ""}
+        data.update(overrides)
+        return self.client.post(reverse("account_edit"), data)
+
+    def test_phone_is_saved_and_shown(self):
+        res = self.post_edit(phone="090-1234-5678")
+        self.assertRedirects(res, reverse("account_detail"))
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.phone, "090-1234-5678")
+        self.assertContains(self.client.get(reverse("account_detail")), "090-1234-5678")
+
+    def test_phone_unregistered_is_shown_when_empty(self):
+        self.post_edit(phone="")
+        self.assertContains(self.client.get(reverse("account_detail")), "未登録")
+
+    def test_full_width_phone_is_converted(self):
+        self.post_edit(phone="０９０－１２３４－５６７８")
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.phone, "090-1234-5678")
+
+    def test_invalid_phone_is_rejected(self):
+        for phone in ["12345789", "abc", "090-1234-567", "090--1234-5678", "+81-90-1234-5678"]:
+            with self.subTest(phone=phone):
+                res = self.post_edit(phone=phone)
+                self.assertContains(res, "電話番号は、数字とハイフンで入力してください（例: 090-1234-5678）。")
+                self.user.refresh_from_db()
+                self.assertEqual(self.user.phone, "")
+
+    def test_japanese_email_is_rejected(self):
+        res = self.post_edit(email="山田@example.jp")
+        self.assertEqual(res.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "taro@example.jp")
+
+    def test_signup_screen_has_no_phone_field(self):
+        res = self.client.get(reverse("account_new"))
+        self.assertNotContains(res, 'name="phone"')
+
+
     def test_delete_removes_account(self):
         res = self.client.post(reverse("account_delete"))
         self.assertRedirects(res, reverse("login"))

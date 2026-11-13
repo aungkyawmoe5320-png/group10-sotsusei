@@ -13,6 +13,9 @@
       <div class="form-text mb-3 mt-n2">年齢などは、登録後に「要介護者の設定」から入力できます。</div>
     {% endif %}
     {% include "includes/field.html" with field=form.email %}
+    {% if mode == 'edit' %}
+      {% include "includes/field.html" with field=form.phone %}
+    {% endif %}
     {% if mode == 'new' %}
       {% include "includes/field.html" with field=form.password %}
     {% endif %}

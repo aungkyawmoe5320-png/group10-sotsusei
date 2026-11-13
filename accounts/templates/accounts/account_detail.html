@@ -5,7 +5,7 @@
   <dl class="row card card-body shadow-sm flex-row">
     <dt class="col-4">介護者氏名</dt><dd class="col-8">{{ user.name }}</dd>
     <dt class="col-4">メール</dt><dd class="col-8">{{ user.email }}</dd>
-    <dt class="col-4">電話番号</dt><dd class="col-8">未登録</dd>
+    <dt class="col-4">電話番号</dt><dd class="col-8">{{ user.phone|default:"未登録" }}</dd>
     <dt class="col-4">種類</dt><dd class="col-8">{{ user.get_role_display }}</dd>
   </dl>
   <div class="d-flex flex-wrap gap-2 mb-4">

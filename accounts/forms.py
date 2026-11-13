@@ -1,5 +1,9 @@
 import string
 
+import re
+import string
+import unicodedata
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.db import transaction
@@ -19,7 +23,24 @@ def is_strong_password(password):
         and any(c in string.punctuation for c in password)
     )
 
+PHONE_RULE_MESSAGE = "電話番号は、数字とハイフンで入力してください（例: 090-1234-5678）。"
 
+
+def normalize_phone(text):
+    """全角の数字・ハイフンを半角にそろえ、前後の空白を取る。"""
+    return unicodedata.normalize("NFKC", text).strip()
+
+
+def is_valid_phone(phone):
+    """数字とハイフンだけで、0から始まる10桁か11桁か。（例: 090-1234-5678、03-1234-5678）"""
+    if not re.fullmatch(r"[0-9]+(-[0-9]+)*", phone):  # 先頭・末尾・連続のハイフンはだめ
+        return False
+    digits = phone.replace("-", "")
+    if not digits.startswith("0") or len(digits) not in (10, 11):
+        return False
+    if digits[:3] in ("070", "080", "090"):  # 携帯電話は11桁
+        return len(digits) == 11
+    return True
 class BootstrapMixin:
     """全ての入力欄に Bootstrap の見た目（form-control）を付ける。"""
 
@@ -68,11 +89,18 @@ class SignUpForm(BootstrapMixin, forms.ModelForm):
 
 
 class AccountEditForm(BootstrapMixin, forms.ModelForm):
-    """アカウント情報の編集（Update）。"""
+    """アカウント情報の編集（Update）。電話番号は、ここからだけ入力できる。"""
+
+    phone = forms.CharField(
+        label="電話番号",
+        required=False,
+        max_length=20,
+        widget=forms.TextInput(attrs={"type": "tel", "placeholder": "例: 090-1234-5678", "autocomplete": "tel"}),
+    )
 
     class Meta:
         model = User
-        fields = ["name", "email"]
+        fields = ["name", "email", "phone"]
         labels = {"name": "介護者氏名"}
 
     def clean_email(self):
@@ -81,6 +109,11 @@ class AccountEditForm(BootstrapMixin, forms.ModelForm):
             raise forms.ValidationError("このメールアドレスは既に登録されています。")
         return email
 
+    def clean_phone(self):
+        phone = normalize_phone(self.cleaned_data["phone"])
+        if phone and not is_valid_phone(phone):
+            raise forms.ValidationError(PHONE_RULE_MESSAGE)
+        return phone  # 空のままなら「未登録」として保存される
 
 class CareRecipientForm(BootstrapMixin, forms.ModelForm):
     """要介護者の追加・設定。"""

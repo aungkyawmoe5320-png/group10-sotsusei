@@ -52,6 +52,7 @@ class User(AbstractUser):
     username = None  # ユーザー名は使わず、メールアドレスでログインする
     email = models.EmailField("メールアドレス", unique=True)
     name = models.CharField("氏名", max_length=50)
+    phone = models.CharField("電話番号", max_length=20, blank=True)
     role = models.CharField("利用の種類", max_length=20, choices=Role.choices, default=Role.USER)
     facility = models.ForeignKey(
         Facility,
