@@ -1,29 +1,27 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import AccountEditForm, RoleLoginForm, SignUpForm
-from .models import User
+from .current import SESSION_KEY, get_current_recipient
+from .forms import AccountEditForm, CareRecipientForm, LoginForm, SignUpForm
 
 
 def index(request):
-    """トップ画面。ログイン済みならホームへ。"""
+    """トップ画面。ログイン済みならホームへ、未ログインならログイン画面へ。"""
     if request.user.is_authenticated:
         return redirect("dashboard")
-    return render(request, "index.html")
+    return redirect("login")
 
 
-def login_view(request, role):
-    """ログイン画面。URLの role で一般ユーザー用・介護士用を切り替える。"""
-    if role not in User.Role.values:
-        return redirect("index")
-    form = RoleLoginForm(request.POST or None, role=role, request=request)
+def login_view(request):
+    """ログイン画面（一般ユーザー用の1つだけ）。"""
+    form = LoginForm(request.POST or None, request=request)
     if request.method == "POST" and form.is_valid():
         login(request, form.user)
-        return redirect("dashboard")
-    return render(request, "accounts/login.html", {"form": form, "target": role})
+        return redirect("care_recipient_select")  # 要介護者を選ぶ（1人なら自動で選ばれる）
+    return render(request, "accounts/login.html", {"form": form})
 
 
 @require_POST
@@ -31,14 +29,12 @@ def logout_view(request):
     """ログアウト（安全のため POST のみ受け付ける）。"""
     logout(request)
     messages.info(request, "ログアウトしました。")
-    return redirect("index")
+    return redirect("login")
 
 
 @login_required
 def dashboard(request):
-    """ログイン後のホーム。役割ごとに画面を分ける（中身は来週以降に実装）。"""
-    if request.user.is_caregiver:
-        return render(request, "accounts/dashboard_caregiver.html")
+    """ログイン後のホーム。"""
     return render(request, "accounts/dashboard_user.html")
 
 
@@ -47,14 +43,19 @@ def account_new(request):  # Create
     form = SignUpForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
-        messages.success(request, "アカウントを登録しました。ログインしてください。")
-        return redirect("login", role=user.role)
+        login(request, user)  # 登録したら、そのままログインする
+        messages.success(request, "アカウントを登録しました。")
+        return redirect("dashboard")
     return render(request, "accounts/account_form.html", {"form": form, "mode": "new"})
 
 
 @login_required
 def account_detail(request):  # Read
-    return render(request, "accounts/account_detail.html")
+    context = {
+        "recipients": list(request.user.recipients.all()),
+        "current": get_current_recipient(request),
+    }
+    return render(request, "accounts/account_detail.html", context)
 
 
 @login_required
@@ -74,5 +75,65 @@ def account_delete(request):  # Delete
         logout(request)
         user.delete()
         messages.info(request, "アカウントを削除しました。")
-        return redirect("index")
+        return redirect("login")
     return render(request, "accounts/account_delete.html")
+
+
+# ---- 要介護者 ----
+@login_required
+def care_recipient_new(request):  # 要介護者の追加
+    form = CareRecipientForm(request.POST or None, user=request.user)
+    if request.method == "POST" and form.is_valid():
+        recipient = form.save()
+        messages.success(request, f"{recipient.name}さんを要介護者に追加しました。")
+        return redirect("account_detail")
+    return render(request, "accounts/care_recipient_form.html", {"form": form, "mode": "new"})
+
+
+@login_required
+def care_recipient_edit(request, pk):  # 要介護者の設定
+    recipient = get_object_or_404(request.user.recipients, pk=pk)  # 他の人の要介護者は 404
+    form = CareRecipientForm(request.POST or None, instance=recipient, user=request.user)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "要介護者の設定を更新しました。")
+        return redirect("account_detail")
+    context = {
+        "form": form,
+        "mode": "edit",
+        "recipient": recipient,
+        "can_delete": request.user.recipients.count() > 1,
+    }
+    return render(request, "accounts/care_recipient_form.html", context)
+
+
+@login_required
+@require_POST
+def care_recipient_delete(request, pk):  # 要介護者の削除（1人だけのときは削除できない）
+    recipient = get_object_or_404(request.user.recipients, pk=pk)
+    if request.user.recipients.count() <= 1:
+        messages.warning(request, "要介護者が1人だけのときは、削除できません。")
+        return redirect("care_recipient_edit", pk=pk)
+    name = recipient.name
+    recipient.delete()
+    messages.info(request, f"{name}さんを要介護者から削除しました。")
+    return redirect("account_detail")
+
+
+@login_required
+def care_recipient_select(request):  # 要介護者の選択（ログイン後・アカウント画面からの切り替え）
+    recipients = list(request.user.recipients.all())
+    if not recipients:  # 要介護者がまだいないアカウント（以前に作ったもの）
+        return redirect("dashboard")
+    if request.method == "POST":
+        chosen = next((r for r in recipients if str(r.pk) == request.POST.get("recipient_id")), None)
+        if chosen:
+            request.session[SESSION_KEY] = chosen.pk
+            messages.success(request, f"{chosen.name}さんを選択しました。")
+            return redirect("dashboard")
+        messages.error(request, "要介護者を選んでください。")
+    elif len(recipients) == 1:  # 1人だけなら、選ぶ必要はない
+        request.session[SESSION_KEY] = recipients[0].pk
+        return redirect("dashboard")
+    context = {"recipients": recipients, "selected_id": request.session.get(SESSION_KEY)}
+    return render(request, "accounts/care_recipient_select.html", context)

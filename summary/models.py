@@ -3,12 +3,18 @@ from django.db import models
 
 
 class SummaryPdf(models.Model):
-    """まとめPDF（ユーザー1人につき1つ。作成後は同じPDFを更新する）。"""
+    """まとめPDF（要介護者1人につき1つ。作成後は同じPDFを更新する）。"""
 
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name="作成した人",
         on_delete=models.CASCADE,  # アカウントを消したら、PDFも消す
+        related_name="summary_pdfs",
+    )
+    care_recipient = models.OneToOneField(
+        "accounts.CareRecipient",
+        verbose_name="要介護者",
+        on_delete=models.CASCADE,  # 要介護者を削除したら、その人のPDFも消す
         related_name="summary_pdf",
     )
     # まとめる項目 例: {"basic": true, "prereg": [1, 3], "schedule": false}
@@ -23,4 +29,5 @@ class SummaryPdf(models.Model):
         verbose_name_plural = "まとめPDF"
 
     def __str__(self):
-        return f"{self.user.name}さんの情報まとめ"
+        owner = self.care_recipient or self.user
+        return f"{owner.name}さんの情報まとめ"

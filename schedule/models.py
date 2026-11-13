@@ -1,7 +1,7 @@
+import datetime
+
 from django.conf import settings
 from django.db import models
-
-import datetime
 
 
 class Schedule(models.Model):
@@ -11,6 +11,12 @@ class Schedule(models.Model):
         settings.AUTH_USER_MODEL,
         verbose_name="登録した人",
         on_delete=models.CASCADE,
+        related_name="schedules",
+    )
+    care_recipient = models.ForeignKey(
+        "accounts.CareRecipient",
+        verbose_name="要介護者",
+        on_delete=models.CASCADE,  # 要介護者を削除したら、その人の予定も消す
         related_name="schedules",
     )
     time = models.TimeField("予定時刻")

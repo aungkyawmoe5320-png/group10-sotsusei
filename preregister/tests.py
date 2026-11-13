@@ -1,15 +1,18 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from accounts.models import Facility, User
+from accounts.models import CareRecipient, User
 
 from .models import Medication, PreRegistration
 
 PASSWORD = "Mimamori-2026!"
 
 
-def make_entry(user, condition="歩くとふらつく", notes="塩分を控える", meds=(), **kwargs):
-    entry = PreRegistration.objects.create(user=user, condition=condition, notes=notes, **kwargs)
+def make_entry(user, condition="歩くとふらつく", notes="塩分を控える", meds=(), recipient=None, **kwargs):
+    recipient = recipient or user.recipients.order_by("id").first()
+    entry = PreRegistration.objects.create(
+        user=user, care_recipient=recipient, condition=condition, notes=notes, **kwargs
+    )
     for name, timing in meds:
         Medication.objects.create(pre_registration=entry, name=name, timing=timing)
     return entry
@@ -34,7 +37,9 @@ class PreRegisterTestBase(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email="taro@example.jp", password=PASSWORD, name="山田 太郎")
         self.other = User.objects.create_user(email="jiro@example.jp", password=PASSWORD, name="山田 次郎")
-        self.client.force_login(self.user)
+        self.recipient = CareRecipient.objects.create(user=self.user, name="山田 花子")
+        self.other_recipient = CareRecipient.objects.create(user=self.other, name="佐藤 和子")
+        self.client.force_login(self.user)  # 要介護者が1人なら、自動で選ばれる
 
 
 class AccessTests(PreRegisterTestBase):
@@ -45,18 +50,8 @@ class AccessTests(PreRegisterTestBase):
     def test_anonymous_is_sent_to_top(self):
         self.client.logout()
         for name in self.URLS:
-            self.assertRedirects(self.client.get(reverse(name)), reverse("index"), msg_prefix=name)
-
-    def test_caregiver_is_sent_to_dashboard(self):
-        facility = Facility.objects.create(facility_code="F-0012", name="テスト施設")
-        caregiver = User.objects.create_user(
-            email="hanako@example.jp", password=PASSWORD, name="介護 花子",
-            role=User.Role.CAREGIVER, facility=facility,
-        )
-        self.client.force_login(caregiver)
-        for name in self.URLS:
             self.assertRedirects(
-                self.client.get(reverse(name)), reverse("dashboard"), fetch_redirect_response=False, msg_prefix=name
+                self.client.get(reverse(name)), reverse("index"), msg_prefix=name, fetch_redirect_response=False
             )
 
     def test_top_page_has_preregister_button(self):
@@ -127,6 +122,7 @@ class CreateTests(PreRegisterTestBase):  # 情報登録
         self.assertContains(res, "事前登録を追加しました。")
         entry = PreRegistration.objects.get()
         self.assertEqual(entry.user, self.user)  # 登録した本人のものになる
+        self.assertEqual(entry.care_recipient, self.recipient)  # 選択中の要介護者のものになる
         self.assertEqual(entry.care_level, "要介護3")
         self.assertEqual([(m.name, m.timing) for m in entry.medications.all()],
                          [("血圧の薬", "朝食後"), ("胃薬", "夕食後")])
@@ -261,3 +257,60 @@ class CsrfTests(PreRegisterTestBase):
         res = strict.post(reverse("preregister_new"), post_data())
         self.assertEqual(res.status_code, 403)
         self.assertEqual(PreRegistration.objects.count(), 0)
+
+
+class RecipientScopeTests(PreRegisterTestBase):
+    """事前登録は、選択中の要介護者ごとに分かれる（同じアカウントの別の要介護者のものは見えない）。"""
+
+    def setUp(self):
+        super().setUp()
+        self.jiro = CareRecipient.objects.create(user=self.user, name="山田 次郎")
+        self.select(self.recipient)
+
+    def select(self, recipient):
+        self.client.post(reverse("care_recipient_select"), {"recipient_id": recipient.pk})
+
+    def test_list_shows_only_selected_recipients_entries(self):
+        make_entry(self.user, condition="花子の状況", recipient=self.recipient)
+        make_entry(self.user, condition="次郎の状況", recipient=self.jiro)
+        res = self.client.get(reverse("preregister"))
+        self.assertContains(res, "花子の状況")
+        self.assertNotContains(res, "次郎の状況")
+        self.select(self.jiro)
+        res = self.client.get(reverse("preregister"))
+        self.assertContains(res, "次郎の状況")
+        self.assertNotContains(res, "花子の状況")
+
+    def test_new_entry_belongs_to_selected_recipient(self):
+        self.select(self.jiro)
+        self.client.post(reverse("preregister_new"), post_data())
+        entry = PreRegistration.objects.get()
+        self.assertEqual((entry.user, entry.care_recipient), (self.user, self.jiro))
+
+    def test_cannot_open_entry_of_another_recipient_in_same_account(self):
+        theirs = make_entry(self.user, condition="次郎の状況", recipient=self.jiro)
+        for name in ["preregister_detail", "preregister_edit"]:
+            res = self.client.get(reverse(name, args=[theirs.pk]))
+            self.assertRedirects(res, reverse("preregister"), msg_prefix=name)
+        self.client.post(reverse("preregister_delete", args=[theirs.pk]))
+        self.assertTrue(PreRegistration.objects.filter(pk=theirs.pk).exists())
+
+    def test_not_selected_goes_to_select_screen(self):
+        self.client.logout()
+        self.client.force_login(self.user)  # 新しいログイン = まだ選んでいない
+        res = self.client.get(reverse("preregister"))
+        self.assertRedirects(res, reverse("care_recipient_select"), fetch_redirect_response=False)
+
+    def test_account_without_recipient_goes_to_account_screen(self):
+        self.recipient.delete()
+        self.jiro.delete()
+        self.client.logout()
+        self.client.force_login(self.user)
+        res = self.client.get(reverse("preregister"))
+        self.assertRedirects(res, reverse("account_detail"), fetch_redirect_response=False)
+
+    def test_deleting_a_recipient_removes_their_entries(self):
+        make_entry(self.user, recipient=self.jiro, meds=[("胃薬", "夕食後")])
+        self.client.post(reverse("care_recipient_delete", args=[self.jiro.pk]))
+        self.assertFalse(PreRegistration.objects.exists())
+        self.assertFalse(Medication.objects.exists())

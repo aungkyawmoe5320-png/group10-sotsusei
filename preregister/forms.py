@@ -24,9 +24,10 @@ class PreRegistrationForm(forms.ModelForm):
             },
         }
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user=None, care_recipient=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        self.care_recipient = care_recipient
         self.fields["care_level"].choices = [("", "選択しない"), *CareLevel.choices]
         self.fields["care_level"].required = False
         if self.is_bound:
@@ -63,6 +64,7 @@ class PreRegistrationForm(forms.ModelForm):
         entry = super().save(commit=False)
         if entry.pk is None:
             entry.user = self.user
+            entry.care_recipient = self.care_recipient
         entry.save()
         entry.medications.all().delete()
         Medication.objects.bulk_create(

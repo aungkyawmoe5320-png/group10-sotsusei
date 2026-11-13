@@ -1,17 +1,16 @@
 import json
-from .models import AlertSetting, PushLog, PushSubscription, Schedule
-from django.http import JsonResponse
+
 from django.conf import settings as django_settings
-from .models import PushSubscription
 from django.contrib import messages
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
-from accounts.decorators import user_required
+from accounts.decorators import recipient_required, user_required
 
 from .forms import AlertSettingForm, ScheduleForm
-from .models import AlertSetting, Schedule
+from .models import AlertSetting, PushLog, PushSubscription, Schedule
 
 MSG_ADDED = "予定を追加しました。"
 MSG_UPDATED = "予定を更新しました。"
@@ -20,8 +19,8 @@ MSG_ALERT_SAVED = "アラート設定を保存しました。"
 
 
 def _own_schedule(request, pk):
-    """ログイン中の本人の予定だけを返す。他人のもの・存在しないものは None。"""
-    return Schedule.objects.filter(pk=pk, user=request.user).first()
+    """選択中の要介護者の予定だけを返す。他の人のもの・同じアカウントの別の要介護者のもの・存在しないものは None。"""
+    return Schedule.objects.filter(pk=pk, care_recipient=request.recipient).first()
 
 
 def _form_page(request, form, mode):
@@ -31,6 +30,7 @@ def _form_page(request, form, mode):
 
 
 @user_required
+@recipient_required
 def schedule_list(request):
     # Opened from a notification (?ack=<id>): mark that alert as acknowledged.
     # Filtering by the user keeps people from touching each other's logs.
@@ -39,7 +39,7 @@ def schedule_list(request):
         PushLog.objects.filter(pk=int(ack), schedule__user=request.user).update(
             acknowledged=True
         )
-    schedules = Schedule.objects.filter(user=request.user)
+    schedules = Schedule.objects.filter(care_recipient=request.recipient)
     alert_setting, _ = AlertSetting.objects.get_or_create(user=request.user)
     return render(request, "schedule/list.html", {
         "schedules": schedules,
@@ -48,35 +48,40 @@ def schedule_list(request):
 
 
 @user_required
+@recipient_required
 def schedule_new(request):
     if request.method == "POST":
-        form = ScheduleForm(request.POST, user=request.user)
+        form = ScheduleForm(request.POST, user=request.user, care_recipient=request.recipient)
         if form.is_valid():
             form.save()
             messages.success(request, MSG_ADDED)
             return redirect("schedule")
     else:
-        form = ScheduleForm(user=request.user)
+        form = ScheduleForm(user=request.user, care_recipient=request.recipient)
     return _form_page(request, form, "new")
 
 
 @user_required
+@recipient_required
 def schedule_edit(request, pk):
     schedule = _own_schedule(request, pk)
     if schedule is None:
         return redirect("schedule")
     if request.method == "POST":
-        form = ScheduleForm(request.POST, instance=schedule, user=request.user)
+        form = ScheduleForm(
+            request.POST, instance=schedule, user=request.user, care_recipient=request.recipient
+        )
         if form.is_valid():
             form.save()
             messages.success(request, MSG_UPDATED)
             return redirect("schedule")
     else:
-        form = ScheduleForm(instance=schedule, user=request.user)
+        form = ScheduleForm(instance=schedule, user=request.user, care_recipient=request.recipient)
     return _form_page(request, form, "edit")
 
 
 @user_required
+@recipient_required
 @require_POST
 def schedule_delete(request, pk):
     schedule = _own_schedule(request, pk)
@@ -88,9 +93,11 @@ def schedule_delete(request, pk):
 
 
 @user_required
+@recipient_required
 def alert_settings(request):
+    # 設定そのもの（オン/オフ・タイミングなど）はアカウントごと。項目ごとのスイッチは、選択中の要介護者の予定。
     setting, _ = AlertSetting.objects.get_or_create(user=request.user)
-    schedules = list(Schedule.objects.filter(user=request.user))
+    schedules = list(Schedule.objects.filter(care_recipient=request.recipient))
     if request.method == "POST":
         form = AlertSettingForm(request.POST, instance=setting)
         if form.is_valid():
@@ -111,6 +118,8 @@ def alert_settings(request):
         "schedules": schedules,
         "vapid_public_key": django_settings.VAPID_PUBLIC_KEY,
     })
+
+
 @user_required
 @require_POST
 def push_subscribe(request):

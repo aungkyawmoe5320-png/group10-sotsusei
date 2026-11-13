@@ -38,6 +38,14 @@ class PreRegistration(models.Model):
         on_delete=models.CASCADE,  # アカウントを消したら、その人の事前登録も消す
         related_name="pre_registrations",
     )
+
+    care_recipient = models.ForeignKey(
+        "accounts.CareRecipient",
+        verbose_name="要介護者",
+        on_delete=models.CASCADE,  # 要介護者を削除したら、その人の事前登録も消す
+        related_name="pre_registrations",
+    )
+    
     diagnosis = models.CharField("病名", max_length=50, blank=True)
     hospital = models.CharField("病院", max_length=50, blank=True)
     care_level = models.CharField("要介護度", max_length=10, choices=CareLevel.choices, blank=True)

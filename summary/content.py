@@ -18,20 +18,25 @@ def _answer_text(q, answers):
     return text
 
 
-def build_sections(user, pdf):
-    """PDFに載せる内容を、見出しごとのリストにして返す。
+def build_sections(recipient, pdf):
+    """PDFに載せる内容を、見出しごとのリストにして返す（recipient: 要介護者）。
     まとめる項目で選んだものと、アンケートの「個人情報の使用範囲」で許可された区分だけを載せる。
     """
     items, answers = pdf.items, pdf.survey
     sections = []
 
     if items.get("basic"):
-        sections.append({"heading": "基本情報", "text": "", "details": [f"氏名: {user.name}", f"メールアドレス: {user.email}"]})
+        age = recipient.display_age
+        sections.append({"heading": "基本情報", "text": "", "details": [
+            f"氏名: {recipient.name}",
+            f"年齢: {age}歳" if age is not None else "年齢: 未登録",
+            f"介護者との関係: {recipient.relation or '未登録'}",
+        ]})
 
     ids = items.get("prereg", [])
     if ids:
         details = []
-        for e in user.pre_registrations.filter(id__in=ids).prefetch_related("medications"):
+        for e in recipient.pre_registrations.filter(id__in=ids).prefetch_related("medications"):
             parts = [f"【{e.condition}】"]
             if e.diagnosis:
                 parts.append(f"病名: {e.diagnosis}")
@@ -48,7 +53,7 @@ def build_sections(user, pdf):
             sections.append({"heading": "事前登録", "text": "", "details": details})
 
     if items.get("schedule"):
-        details = [f"{s.time:%H:%M} {s.title}" for s in user.schedules.all()]
+        details = [f"{s.time:%H:%M} {s.title}" for s in recipient.schedules.all()]
         sections.append({"heading": "スケジュール", "text": "" if details else "登録された予定はありません。", "details": details})
 
     # アンケート: 同意した使用範囲の区分だけを載せる
