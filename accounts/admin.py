@@ -1,27 +1,27 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import UserAdmin
 
-from .models import Facility, User
-
-
-@admin.register(Facility)
-class FacilityAdmin(admin.ModelAdmin):
-    list_display = ("facility_code", "name")
-    search_fields = ("facility_code", "name")
+from .models import CareRecipient, User
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class CustomUserAdmin(UserAdmin):
     ordering = ("email",)
-    list_display = ("email", "name", "role", "facility", "is_staff")
-    list_filter = ("role", "is_staff", "is_active")
-    search_fields = ("email", "name")
+    list_display = ("email", "name", "phone", "is_staff")
+    list_filter = ("is_staff", "is_active")
+    search_fields = ("email", "name", "phone")
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("基本情報", {"fields": ("name", "role", "facility")}),
+        ("基本情報", {"fields": ("name", "phone")}),
         ("権限", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("日時", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
-        (None, {"classes": ("wide",), "fields": ("email", "name", "role", "facility", "password1", "password2")}),
+        (None, {"classes": ("wide",), "fields": ("email", "name", "password1", "password2")}),
     )
+
+
+@admin.register(CareRecipient)
+class CareRecipientAdmin(admin.ModelAdmin):
+    list_display = ("name", "user", "relation", "age")
+    search_fields = ("name", "user__email")

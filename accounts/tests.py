@@ -21,7 +21,6 @@ class SignUpTests(TestCase):
         res = self.post_signup()
         self.assertRedirects(res, reverse("dashboard"))
         user = User.objects.get(email="taro@example.jp")  # メールは小文字で保存
-        self.assertEqual(user.role, "user")
         self.assertNotEqual(user.password, PASSWORD)  # 平文で保存されていない
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)  # そのままログイン
 
