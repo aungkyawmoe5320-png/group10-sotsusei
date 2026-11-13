@@ -3,20 +3,6 @@ from django.db import models
 from django.utils import timezone
 
 
-class Facility(models.Model):
-    """介護施設。介護士は必ずどこかの施設に所属する。"""
-
-    facility_code = models.CharField("施設ID", max_length=20, unique=True)  # 例: F-0012
-    name = models.CharField("施設名", max_length=100)
-
-    class Meta:
-        verbose_name = "施設"
-        verbose_name_plural = "施設"
-
-    def __str__(self):
-        return f"{self.facility_code} {self.name}"
-
-
 class UserManager(BaseUserManager):
     """メールアドレスでログインするためのユーザー作成処理。"""
 
@@ -43,25 +29,12 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """システムの利用者。一般ユーザー（在宅介護の家族）または介護士。"""
-
-    class Role(models.TextChoices):
-        USER = "user", "一般ユーザー"
-        CAREGIVER = "caregiver", "介護士"
+    """システムの利用者（在宅介護の家族）。メールアドレスでログインする。"""
 
     username = None  # ユーザー名は使わず、メールアドレスでログインする
     email = models.EmailField("メールアドレス", unique=True)
     name = models.CharField("氏名", max_length=50)
     phone = models.CharField("電話番号", max_length=20, blank=True)
-    role = models.CharField("利用の種類", max_length=20, choices=Role.choices, default=Role.USER)
-    facility = models.ForeignKey(
-        Facility,
-        verbose_name="所属施設",
-        on_delete=models.PROTECT,  # 介護士がいる施設は削除できない
-        null=True,
-        blank=True,
-        related_name="caregivers",
-    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["name"]
@@ -73,11 +46,7 @@ class User(AbstractUser):
         verbose_name_plural = "ユーザー"
 
     def __str__(self):
-        return f"{self.name}（{self.get_role_display()}）"
-
-    @property
-    def is_caregiver(self):
-        return self.role == self.Role.CAREGIVER
+        return self.name
 
 
 class CareRecipient(models.Model):
