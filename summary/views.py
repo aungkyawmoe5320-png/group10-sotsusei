@@ -6,7 +6,8 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from accounts.decorators import user_required
+from accounts.decorators import recipient_required, user_required
+
 from .content import build_sections
 from .models import SummaryPdf
 from .pdf import build_pdf
@@ -29,60 +30,80 @@ MSG_DELETED = "PDFを削除しました。"
 MSG_DOWNLOAD = "PDFのダウンロードは準備中です（今回は表示のみです）。"
 PREFILL_SURVEY = True  # True: 更新のとき、前回の答えを入れた状態でアンケートを開く（同意と署名は毎回入れ直す）
 
+
 def _own_pdf(request):
-    """ログイン中の本人のPDF。なければ None。"""
-    return SummaryPdf.objects.filter(user=request.user).first()
+    """選択中の要介護者のPDF。なければ None。"""
+    return SummaryPdf.objects.filter(care_recipient=request.recipient).first()
 
 
-def _default_items(user):
+def _default_items(recipient):
     """まとめる項目の初期値（すべて選ぶ）。"""
-    return {"basic": True, "prereg": list(user.pre_registrations.values_list("id", flat=True)), "schedule": True}
+    return {
+        "basic": True,
+        "prereg": list(recipient.pre_registrations.values_list("id", flat=True)),
+        "schedule": True,
+    }
 
 
 def _items_empty(items):
     return not (items["basic"] or items["prereg"] or items["schedule"])
 
 
+def _get_pending(request):
+    """選んだ途中の項目。ほかの要介護者を選んでいたときのものは、使わない。"""
+    pending = request.session.get(PENDING_KEY)
+    if isinstance(pending, dict) and pending.get("recipient") == request.recipient.pk:
+        return pending["items"]
+    return None
+
+
+def _set_pending(request, items):
+    request.session[PENDING_KEY] = {"recipient": request.recipient.pk, "items": items}
+
+
 def _select_page(request, items):
     """「まとめる項目を選ぶ」画面。items は、選択の状態。"""
-    user = request.user
+    recipient = request.recipient
     return render(request, "summary/summary.html", {
         "form": items,
         "pdf": _own_pdf(request),
-        "prereg": user.pre_registrations.prefetch_related("medications"),
-        "schedule_count": user.schedules.count(),
+        "prereg": recipient.pre_registrations.prefetch_related("medications"),
+        "schedule_count": recipient.schedules.count(),
     })
 
 
 @user_required
+@recipient_required
 def summary(request):  # ① まとめる項目の選択
     pdf = _own_pdf(request)
     # アンケートから戻ったときは選んだ項目のまま。2回目からは前回の選択。初めてはすべて選択
-    items = request.session.get(PENDING_KEY) or (pdf.items if pdf else _default_items(request.user))
+    items = _get_pending(request) or (pdf.items if pdf else _default_items(request.recipient))
     return _select_page(request, items)
 
 
 @require_POST
 @user_required
+@recipient_required
 def summary_save(request):  # ② 項目を決めて、アンケートへ
     post = request.POST
     chosen = {int(v) for v in post.getlist("prereg") if v.isdigit()}
-    own_ids = set(request.user.pre_registrations.values_list("id", flat=True))
+    own_ids = set(request.recipient.pre_registrations.values_list("id", flat=True))
     items = {
         "basic": "basic" in post,
-        "prereg": sorted(chosen & own_ids),  # 自分の事前登録だけを受け付ける
+        "prereg": sorted(chosen & own_ids),  # 選択中の要介護者の事前登録だけを受け付ける
         "schedule": "schedule" in post,
     }
     if _items_empty(items):
         messages.error(request, MSG_NEED_ITEM)
         return _select_page(request, items)  # 選んだ状態のまま、選び直してもらう
-    request.session[PENDING_KEY] = items
+    _set_pending(request, items)
     return redirect("summary_survey")
 
 
 @user_required
+@recipient_required
 def summary_survey(request):  # ③ アンケート。答えたあとに、PDFを作成・更新する
-    items = request.session.get(PENDING_KEY)
+    items = _get_pending(request)
     if items is None:  # 項目を選ばずに開いたとき
         messages.warning(request, MSG_NEED_SELECT)
         return redirect("summary")
@@ -99,7 +120,8 @@ def summary_survey(request):  # ③ アンケート。答えたあとに、PDF�
                 messages.error(request, message)
         else:
             _, created = SummaryPdf.objects.update_or_create(
-                user=request.user, defaults={"items": items, "survey": answers}
+                care_recipient=request.recipient,
+                defaults={"user": request.user, "items": items, "survey": answers},
             )
             request.session.pop(PENDING_KEY, None)
             messages.success(request, MSG_CREATED if created else MSG_UPDATED)
@@ -114,15 +136,17 @@ def summary_survey(request):  # ③ アンケート。答えたあとに、PDF�
 
 
 @user_required
+@recipient_required
 def summary_detail(request):  # ④ 作成したPDFを見る
     pdf = _own_pdf(request)
     if pdf is None:
         return redirect("summary")
-    return render(request, "summary/detail.html", {"pdf": pdf, "sections": build_sections(request.user, pdf)})
+    return render(request, "summary/detail.html", {"pdf": pdf, "sections": build_sections(request.recipient, pdf)})
 
 
 @require_POST
 @user_required
+@recipient_required
 def summary_delete(request):  # ⑥ PDFを削除する（確認ダイアログのあとに送る）
     pdf = _own_pdf(request)
     if pdf is not None:
@@ -132,14 +156,15 @@ def summary_delete(request):  # ⑥ PDFを削除する（確認ダイアログ�
 
 
 @user_required
+@recipient_required
 def summary_download(request):  # ⑤ PDFファイルをダウンロードする
     pdf = _own_pdf(request)
     if pdf is None:
         return redirect("summary")
     data = build_pdf(
-       title=str(pdf),
-       updated=f"{timezone.localtime(pdf.updated_at):%Y-%m-%d}",  # 日本時間の日付にする
-       sections=build_sections(request.user, pdf),
-       signature=pdf.survey.get("signature", ""),
+        title=str(pdf),
+        updated=f"{timezone.localtime(pdf.updated_at):%Y-%m-%d}",  # 日本時間の日付にする
+        sections=build_sections(request.recipient, pdf),
+        signature=pdf.survey.get("signature", ""),
     )
     return FileResponse(io.BytesIO(data), as_attachment=True, filename=f"{pdf}.pdf", content_type="application/pdf")
