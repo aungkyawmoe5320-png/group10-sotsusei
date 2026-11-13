@@ -6,7 +6,8 @@
     <dt class="col-4">介護者氏名</dt><dd class="col-8">{{ user.name }}</dd>
     <dt class="col-4">メール</dt><dd class="col-8">{{ user.email }}</dd>
     <dt class="col-4">電話番号</dt><dd class="col-8">{{ user.phone|default:"未登録" }}</dd>
-    <dt class="col-4">種類</dt><dd class="col-8">一般ユーザー</dd>  </dl>
+    <dt class="col-4">種類</dt><dd class="col-8">一般ユーザー</dd>
+  </dl>
   <div class="d-flex flex-wrap gap-2 mb-4">
     <a class="btn btn-success" href="{% url 'account_edit' %}">編集</a>
     <form method="post" action="{% url 'logout' %}">
