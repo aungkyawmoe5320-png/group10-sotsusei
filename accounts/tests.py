@@ -76,7 +76,7 @@ class LoginTests(TestCase):
 
     def test_dashboard_requires_login(self):
         res = self.client.get(reverse("dashboard"))
-        self.assertRedirects(res, reverse("index") + "?next=" + reverse("dashboard"), fetch_redirect_response=False)
+        self.assertRedirects(res, reverse("login") + "?next=" + reverse("dashboard"), fetch_redirect_response=False)
 
     def test_index_redirects_to_login(self):
         res = self.client.get(reverse("index"))
