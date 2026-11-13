@@ -1,7 +1,7 @@
+import datetime
+
 from django.conf import settings
 from django.db import models
-
-import datetime
 
 
 class Schedule(models.Model):
@@ -13,16 +13,12 @@ class Schedule(models.Model):
         on_delete=models.CASCADE,
         related_name="schedules",
     )
-
     care_recipient = models.ForeignKey(
         "accounts.CareRecipient",
         verbose_name="要介護者",
         on_delete=models.CASCADE,  # 要介護者を削除したら、その人の予定も消す
         related_name="schedules",
-        null=True,  # 移行が終わるまでの一時的な設定（あとで必須にする）
-        blank=True,
     )
-
     time = models.TimeField("予定時刻")
     title = models.CharField("予定内容", max_length=50)
     alert = models.BooleanField("アラート", default=True)
