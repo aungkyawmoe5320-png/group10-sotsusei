@@ -3,7 +3,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from accounts.decorators import user_required
+from accounts.decorators import recipient_required, user_required
 
 from .forms import PreRegistrationForm
 from .models import CareLevel, PreRegistration, Timing
@@ -14,8 +14,12 @@ MSG_DELETED = "事前登録を削除しました。"
 
 
 def _own_entry(request, pk):
-    """Return the logged-in user's own pre-registration, or None."""
-    return PreRegistration.objects.filter(pk=pk, user=request.user).prefetch_related("medications").first()
+    """選択中の要介護者の事前登録を返す。なければ None（同じアカウントの別の要介護者のものも None）。"""
+    return (
+        PreRegistration.objects.filter(pk=pk, care_recipient=request.recipient)
+        .prefetch_related("medications")
+        .first()
+    )
 
 
 def _form_page(request, form, mode, cancel_url):
@@ -31,25 +35,28 @@ def _form_page(request, form, mode, cancel_url):
 
 
 @user_required
+@recipient_required
 def preregister_list(request):
-    entries = PreRegistration.objects.filter(user=request.user).prefetch_related("medications")
+    entries = PreRegistration.objects.filter(care_recipient=request.recipient).prefetch_related("medications")
     return render(request, "preregister/list.html", {"entries": entries})
 
 
 @user_required
+@recipient_required
 def preregister_new(request):
     if request.method == "POST":
-        form = PreRegistrationForm(request.POST, user=request.user)
+        form = PreRegistrationForm(request.POST, user=request.user, care_recipient=request.recipient)
         if form.is_valid():
             form.save()
             messages.success(request, MSG_ADDED)
             return redirect("preregister")
     else:
-        form = PreRegistrationForm(user=request.user)
+        form = PreRegistrationForm(user=request.user, care_recipient=request.recipient)
     return _form_page(request, form, "new", cancel_url=reverse("preregister"))
 
 
 @user_required
+@recipient_required
 def preregister_detail(request, pk):
     entry = _own_entry(request, pk)
     if entry is None:
@@ -58,22 +65,26 @@ def preregister_detail(request, pk):
 
 
 @user_required
+@recipient_required
 def preregister_edit(request, pk):
     entry = _own_entry(request, pk)
     if entry is None:
         return redirect("preregister")
     if request.method == "POST":
-        form = PreRegistrationForm(request.POST, instance=entry, user=request.user)
+        form = PreRegistrationForm(
+            request.POST, instance=entry, user=request.user, care_recipient=request.recipient
+        )
         if form.is_valid():
             form.save()
             messages.success(request, MSG_UPDATED)
             return redirect("preregister_detail", pk=entry.pk)
     else:
-        form = PreRegistrationForm(instance=entry, user=request.user)
+        form = PreRegistrationForm(instance=entry, user=request.user, care_recipient=request.recipient)
     return _form_page(request, form, "edit", cancel_url=reverse("preregister_detail", args=[entry.pk]))
 
 
 @user_required
+@recipient_required
 @require_POST
 def preregister_delete(request, pk):
     entry = _own_entry(request, pk)
