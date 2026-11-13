@@ -5,8 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .current import SESSION_KEY, get_current_recipient
-from .forms import AccountEditForm, CareRecipientForm, RoleLoginForm, SignUpForm
-from .models import User
+from .forms import AccountEditForm, CareRecipientForm, LoginForm, SignUpForm
 
 
 def index(request):
@@ -18,7 +17,7 @@ def index(request):
 
 def login_view(request):
     """ログイン画面（一般ユーザー用の1つだけ）。"""
-    form = RoleLoginForm(request.POST or None, role="user", request=request)
+    form = LoginForm(request.POST or None, request=request)
     if request.method == "POST" and form.is_valid():
         login(request, form.user)
         return redirect("care_recipient_select")  # 要介護者を選ぶ（1人なら自動で選ばれる）
@@ -35,9 +34,7 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    """ログイン後のホーム。役割ごとに画面を分ける（中身は来週以降に実装）。"""
-    if request.user.is_caregiver:
-        return render(request, "accounts/dashboard_caregiver.html")
+    """ログイン後のホーム。"""
     return render(request, "accounts/dashboard_user.html")
 
 

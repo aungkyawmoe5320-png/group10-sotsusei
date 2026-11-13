@@ -19,20 +19,12 @@
     <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
     <div id="nav" class="collapse navbar-collapse">
       {% if user.is_authenticated %}
-        {% if user.is_caregiver %}
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">入所者一覧</a></li>
-          {# 来週以降に実装する画面は、URL ができるまで「準備中」表示 #}
-          <li class="nav-item"><span class="nav-link disabled">受け入れ候補を探す（準備中）</span></li>
-          <li class="nav-item"><span class="nav-link disabled">受け入れリスト（準備中）</span></li>
-        </ul>
-        {% else %}
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">ホーム</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'preregister' %}">事前登録</a></li>          
+          <li class="nav-item"><a class="nav-link" href="{% url 'preregister' %}">事前登録</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'schedule' %}">スケジュール</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'summary' %}">AIまとめPDF</a></li>        </ul>
-        {% endif %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'summary' %}">AIまとめPDF</a></li>
+        </ul>
         <span class="navbar-text me-3">{{ user.get_role_display }}</span>
         <a class="btn btn-outline-light btn-sm me-2" href="{% url 'account_detail' %}">アカウント</a>
         <form method="post" action="{% url 'logout' %}" class="d-inline">

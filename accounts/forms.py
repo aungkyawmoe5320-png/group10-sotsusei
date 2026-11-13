@@ -192,23 +192,19 @@ class CareRecipientForm(BootstrapMixin, forms.ModelForm):
             self.initial["age"] = self.instance.display_age
 
 
-class RoleLoginForm(BootstrapMixin, forms.Form):
-    """ログイン。（介護士用の処理は、のちほど整理して取り除く）"""
+class LoginForm(BootstrapMixin, forms.Form):
+    """ログイン（メールアドレスとパスワード）。"""
 
     email = forms.EmailField(
         label="メールアドレス",
         widget=forms.EmailInput(attrs={"placeholder": "example@city.jp"}),
     )
-    facility_code = forms.CharField(label="施設ID", max_length=20, required=False)
     password = forms.CharField(label="パスワード", widget=forms.PasswordInput)
 
-    def __init__(self, *args, role, request=None, **kwargs):
+    def __init__(self, *args, request=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.role = role
         self.request = request
         self.user = None
-        if role == User.Role.CAREGIVER:
-            self.fields["facility_code"].required = True
 
     def clean(self):
         cleaned = super().clean()
@@ -216,13 +212,8 @@ class RoleLoginForm(BootstrapMixin, forms.Form):
         if not email or not password:
             return cleaned
         user = authenticate(self.request, email=email.lower(), password=password)
-        # どの理由で失敗しても同じ文言にする（存在するメールを推測させないため）
-        error = "メールアドレス・施設ID・パスワードのいずれかが正しくありません。"
-        if user is None or user.role != self.role:
-            raise forms.ValidationError(error)
-        if self.role == User.Role.CAREGIVER:
-            code = (cleaned.get("facility_code") or "").strip()
-            if user.facility is None or user.facility.facility_code != code:
-                raise forms.ValidationError(error)
+        if user is None:
+            # どちらが違うのかは教えない（存在するメールを推測させないため）
+            raise forms.ValidationError("メールアドレスまたはパスワードが正しくありません。")
         self.user = user
         return cleaned

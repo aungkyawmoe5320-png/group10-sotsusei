@@ -3,7 +3,7 @@ import datetime
 from django.test import TestCase
 from django.urls import reverse
 
-from accounts.models import CareRecipient, Facility, User
+from accounts.models import CareRecipient, User
 
 from .models import AlertSetting, PushLog, Schedule
 
@@ -33,19 +33,6 @@ class AccessTests(ScheduleTestBase):
             self.assertRedirects(
                 self.client.get(reverse(name)), reverse("index"), msg_prefix=name, fetch_redirect_response=False
             )
-
-    def test_caregiver_is_sent_to_dashboard(self):
-        facility = Facility.objects.create(facility_code="F-0012", name="テスト施設")
-        caregiver = User.objects.create_user(
-            email="hanako@example.jp", password=PASSWORD, name="介護 花子",
-            role=User.Role.CAREGIVER, facility=facility,
-        )
-        self.client.force_login(caregiver)
-        for name in self.URLS:
-            self.assertRedirects(
-                self.client.get(reverse(name)), reverse("dashboard"), fetch_redirect_response=False, msg_prefix=name
-            )
-
 
 class ListTests(ScheduleTestBase):
     def test_only_own_schedules_are_listed(self):
