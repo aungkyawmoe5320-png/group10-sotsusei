@@ -11,6 +11,15 @@ class SummaryPdf(models.Model):
         on_delete=models.CASCADE,  # アカウントを消したら、PDFも消す
         related_name="summary_pdf",
     )
+    care_recipient = models.OneToOneField(
+        "accounts.CareRecipient",
+        verbose_name="要介護者",
+        on_delete=models.CASCADE,  # 要介護者を削除したら、その人のPDFも消す
+        related_name="summary_pdf",
+        null=True,  # 移行が終わるまでの一時的な設定（あとで必須にする）
+        blank=True,
+    )
+
     # まとめる項目 例: {"basic": true, "prereg": [1, 3], "schedule": false}
     items = models.JSONField("まとめる項目", default=dict)
     # アンケートの答え。PDFを削除すると、一緒に消える
