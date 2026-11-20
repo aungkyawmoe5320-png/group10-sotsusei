@@ -1,0 +1,38 @@
+@startuml スケジュール編集
+  actor 一般ユーザー as AC
+  boundary "list.html" as B1
+  control "urls.py" as C0
+  control "schedule_edit" as C1
+  entity スケジュール as E1
+  control "schedule_list" as C2
+  boundary "form.html" as B2
+
+  AC -> B1 : 「編集」ボタンを押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  alt 選択中の要介護者の予定が見つからない場合
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E1 : 参照()
+    C2 <-- E1
+    C2 -> B1 : 一覧を表示する
+  else 見つかった場合
+    C1 -> B2 : 入力済みの入力画面を表示する
+    AC -> B2 : 内容を変更し\n「保存する」ボタンを押下する
+    B2 -> C0 : POST
+    C0 -> C1 : 起動()
+    alt 入力に誤りがある場合
+      C1 -> B2 : エラーメッセージを表示する
+    else それ以外の場合
+      C1 -> E1 : 更新()
+      C1 <-- E1
+      C1 -> C0 : リダイレクト()
+      C0 -> C2 : 起動()
+      C2 -> E1 : 参照()
+      C2 <-- E1
+      C2 -> B1 : 「予定を更新しました。」\nとメッセージを表示し\n一覧を表示する
+    end
+  end
+@enduml

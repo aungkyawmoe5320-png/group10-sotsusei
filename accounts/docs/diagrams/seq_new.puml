@@ -1,0 +1,35 @@
+@startuml アカウント登録
+  actor 一般ユーザー as AC
+  boundary "login.html" as B0
+  control "urls.py" as C0
+  control "account_new" as C1
+  boundary "account_form.html" as B1
+  entity ユーザーアカウント as E1
+  entity 要介護者 as E2
+  control "dashboard" as C2
+  boundary "dashboard_user.html" as B2
+
+  AC -> B0 : 「新規登録」\nボタンを押下する
+  B0 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> B1 : 入力画面を表示する
+  AC -> B1 : 内容を入力し\n「登録する」ボタンを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  alt 未入力の項目がある場合
+    C1 -> B1 : エラーメッセージを表示する
+  else メールアドレスが登録済みの場合
+    C1 -> B1 : エラーメッセージを表示する
+  else パスワードがルールを満たしていない場合
+    C1 -> B1 : エラーメッセージを表示する
+  else それ以外の場合
+    C1 -> E1 : 登録()
+    C1 <-- E1
+    C1 -> E2 : 登録()
+    C1 <-- E2
+    C1 -> C1 : ログイン状態にする
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> B2 : 「アカウントを登録しました。」\nとメッセージを表示し\nホームを表示する
+  end
+@enduml

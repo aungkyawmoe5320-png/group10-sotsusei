@@ -1,0 +1,25 @@
+@startuml プッシュ通知を有効にする
+  actor 一般ユーザー as AC
+  boundary "alert_settings.html" as B1
+  control "urls.py" as C0
+  control "push_subscribe" as C1
+  entity プッシュ通知の送り先 as E1
+
+  AC -> B1 : 「通知を有効にする」\nボタンを押下する
+  B1 -> B1 : 通知の許可を確認する
+  alt 許可されなかった場合
+    B1 -> B1 : 「通知が許可されませんでした。」\nと表示する
+  else 許可された場合
+    B1 -> B1 : 通知の送り先を取得する
+    B1 -> C0 : POST
+    C0 -> C1 : 起動()
+    alt 送り先のデータが正しくない場合
+      C1 -> B1 : 400エラーを返す
+    else それ以外の場合
+      C1 -> E1 : 登録・更新()
+      C1 <-- E1
+      C1 -> B1 : 保存結果を返す
+      B1 -> B1 : 「通知を有効にしました。」\nと表示する
+    end
+  end
+@enduml

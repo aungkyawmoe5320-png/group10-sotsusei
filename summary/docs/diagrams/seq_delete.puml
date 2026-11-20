@@ -1,0 +1,30 @@
+@startuml PDFを削除する
+  actor 一般ユーザー as AC
+  boundary "detail.html" as B1
+  control "urls.py" as C0
+  control "summary_delete" as C1
+  entity まとめPDF as E1
+  control "summary" as C2
+  boundary "summary.html" as B2
+
+  AC -> B1 : 「削除する」ボタンを押下する
+  B1 -> B1 : 確認ダイアログを表示する
+  AC -> B1 : 「OK」ボタンを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  alt PDFがまだない場合
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> B2 : まとめる項目を選ぶ画面を表示する
+  else PDFがある場合
+    C1 -> E1 : 削除()
+    C1 <-- E1
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E1 : 参照()
+    C2 <-- E1
+    C2 -> B2 : 「PDFを削除しました。」\nとメッセージを表示し\nまとめる項目を選ぶ画面を表示する
+  end
+@enduml

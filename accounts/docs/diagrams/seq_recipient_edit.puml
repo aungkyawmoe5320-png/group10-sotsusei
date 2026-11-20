@@ -1,0 +1,35 @@
+@startuml 要介護者の設定
+  actor 一般ユーザー as AC
+  boundary "account_detail.html" as B1
+  control "urls.py" as C0
+  control "care_recipient_edit" as C1
+  entity 要介護者 as E1
+  boundary "404エラー画面" as B3
+  boundary "care_recipient_form.html" as B2
+  control "account_detail" as C2
+
+  AC -> B1 : 「設定」ボタンを押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  alt 自分の要介護者が見つからない場合
+    C1 -> B3 : 404エラーを表示する
+  else 見つかった場合
+    C1 -> B2 : 入力済みの入力画面を表示する
+    AC -> B2 : 内容を変更し\n「保存する」ボタンを押下する
+    B2 -> C0 : POST
+    C0 -> C1 : 起動()
+    alt 入力に誤りがある場合
+      C1 -> B2 : エラーメッセージを表示する
+    else それ以外の場合
+      C1 -> E1 : 更新()
+      C1 <-- E1
+      C1 -> C0 : リダイレクト()
+      C0 -> C2 : 起動()
+      C2 -> E1 : 参照()
+      C2 <-- E1
+      C2 -> B1 : 「要介護者の設定を更新しました。」\nとメッセージを表示し\nアカウント詳細を表示する
+    end
+  end
+@enduml
