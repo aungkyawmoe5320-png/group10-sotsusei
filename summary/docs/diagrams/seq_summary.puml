@@ -1,0 +1,26 @@
+@startuml まとめる項目を選ぶ
+  actor 一般ユーザー as AC
+  boundary "base.html" as B1
+  control "urls.py" as C0
+  control "summary" as C1
+  entity まとめPDF as E1
+  entity 事前登録 as E2
+  entity スケジュール as E3
+  boundary "summary.html" as B2
+
+  AC -> B1 : 「AIまとめPDF」を押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  C1 -> E2 : 参照()
+  C1 <-- E2
+  C1 -> E3 : 参照()
+  C1 <-- E3
+  alt PDFがまだない場合
+    C1 -> C1 : すべての項目を\n選んだ状態にする
+  else PDFがすでにある場合
+    C1 -> C1 : 前回選んだ項目を\n選んだ状態にする
+  end
+  C1 -> B2 : まとめる項目を選ぶ画面を表示する
+@enduml

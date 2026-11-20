@@ -1,0 +1,41 @@
+@startuml ログイン
+  actor 一般ユーザー as AC
+  boundary "login.html" as B1
+  control "urls.py" as C0
+  control "login_view" as C1
+  entity ユーザーアカウント as E1
+  control "care_recipient_select" as C2
+  entity 要介護者 as E2
+  control "dashboard" as C3
+  boundary "dashboard_user.html" as B2
+  boundary "care_recipient_select.html" as B3
+
+  C0 -> C1 : 起動()
+  C1 -> B1 : 表示する
+  AC -> B1 : メールアドレスとパスワードを入力し\n「ログイン」ボタンを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  alt メールアドレスまたはパスワードが未入力の場合
+    C1 -> B1 : エラーメッセージを表示する
+  else それ以外の場合
+    C1 -> E1 : 参照()
+    C1 <-- E1
+    alt メールアドレスまたはパスワードが違う場合
+      C1 -> B1 : 「メールアドレスまたはパスワードが\n正しくありません。」とメッセージを表示する
+    else 一致した場合
+      C1 -> C1 : ログイン状態にする
+      C1 -> C0 : リダイレクト()
+      C0 -> C2 : 起動()
+      C2 -> E2 : 参照()
+      C2 <-- E2
+      alt 要介護者が1人の場合
+        C2 -> C2 : 選択した要介護者を\nセッションに保存する
+        C2 -> C0 : リダイレクト()
+        C0 -> C3 : 起動()
+        C3 -> B2 : ホームを表示する
+      else 要介護者が複数の場合
+        C2 -> B3 : 要介護者の一覧を表示する
+      end
+    end
+  end
+@enduml

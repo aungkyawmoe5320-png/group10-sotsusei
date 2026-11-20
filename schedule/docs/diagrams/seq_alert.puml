@@ -1,0 +1,35 @@
+@startuml アラート設定
+  actor 一般ユーザー as AC
+  boundary "list.html" as B1
+  control "urls.py" as C0
+  control "alert_settings" as C1
+  entity アラート設定 as E1
+  entity スケジュール as E2
+  boundary "alert_settings.html" as B2
+  control "schedule_list" as C2
+
+  AC -> B1 : 「アラート設定」ボタンを押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  C1 -> E2 : 参照()
+  C1 <-- E2
+  C1 -> B2 : 設定画面を表示する
+  AC -> B2 : 内容を変更し\n「保存する」ボタンを押下する
+  B2 -> C0 : POST
+  C0 -> C1 : 起動()
+  alt 入力に誤りがある場合
+    C1 -> B2 : エラーメッセージを表示する
+  else それ以外の場合
+    C1 -> E1 : 更新()
+    C1 <-- E1
+    C1 -> E2 : 更新()
+    C1 <-- E2
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E2 : 参照()
+    C2 <-- E2
+    C2 -> B1 : 「アラート設定を保存しました。」\nとメッセージを表示し\n一覧を表示する
+  end
+@enduml

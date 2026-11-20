@@ -1,0 +1,31 @@
+@startuml スケジュール削除
+  actor 一般ユーザー as AC
+  boundary "list.html" as B1
+  control "urls.py" as C0
+  control "schedule_delete" as C1
+  entity スケジュール as E1
+  control "schedule_list" as C2
+
+  AC -> B1 : 「削除」ボタンを押下する
+  B1 -> B1 : 確認ダイアログを表示する
+  AC -> B1 : 「OK」ボタンを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  alt 選択中の要介護者の予定が見つからない場合
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E1 : 参照()
+    C2 <-- E1
+    C2 -> B1 : 一覧を表示する
+  else 見つかった場合
+    C1 -> E1 : 削除()
+    C1 <-- E1
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E1 : 参照()
+    C2 <-- E1
+    C2 -> B1 : 「予定「〇〇」を削除しました。」\nとメッセージを表示し\n一覧を表示する
+  end
+@enduml

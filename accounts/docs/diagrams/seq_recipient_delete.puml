@@ -1,0 +1,38 @@
+@startuml 要介護者の削除
+  actor 一般ユーザー as AC
+  boundary "care_recipient_form.html" as B1
+  control "urls.py" as C0
+  control "care_recipient_delete" as C1
+  entity 要介護者 as E1
+  boundary "404エラー画面" as B3
+  control "care_recipient_edit" as C2
+  control "account_detail" as C3
+  boundary "account_detail.html" as B2
+
+  AC -> B1 : 「削除する」ボタンを押下する
+  B1 -> B1 : 確認ダイアログを表示する
+  AC -> B1 : 「OK」ボタンを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  alt 自分の要介護者が見つからない場合
+    C1 -> B3 : 404エラーを表示する
+  else 見つかった場合
+    alt 要介護者が1人だけの場合
+      C1 -> C0 : リダイレクト()
+      C0 -> C2 : 起動()
+      C2 -> E1 : 参照()
+      C2 <-- E1
+      C2 -> B1 : 「要介護者が1人だけのときは、\n削除できません。」とメッセージを表示し\n要介護者の設定画面を表示する
+    else それ以外の場合
+      C1 -> E1 : 削除()
+      C1 <-- E1
+      C1 -> C0 : リダイレクト()
+      C0 -> C3 : 起動()
+      C3 -> E1 : 参照()
+      C3 <-- E1
+      C3 -> B2 : 「〇〇さんを要介護者から削除しました。」\nとメッセージを表示し\nアカウント詳細を表示する
+    end
+  end
+@enduml

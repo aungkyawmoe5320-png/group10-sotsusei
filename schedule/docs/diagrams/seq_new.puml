@@ -1,0 +1,28 @@
+@startuml スケジュール追加
+  actor 一般ユーザー as AC
+  boundary "list.html" as B1
+  control "urls.py" as C0
+  control "schedule_new" as C1
+  boundary "form.html" as B2
+  entity スケジュール as E1
+  control "schedule_list" as C2
+
+  AC -> B1 : 「予定を追加」ボタンを押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> B2 : 入力画面を表示する
+  AC -> B2 : 内容を入力し\n「追加する」ボタンを押下する
+  B2 -> C0 : POST
+  C0 -> C1 : 起動()
+  alt 入力に誤りがある場合
+    C1 -> B2 : エラーメッセージを表示する
+  else それ以外の場合
+    C1 -> E1 : 登録()
+    C1 <-- E1
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E1 : 参照()
+    C2 <-- E1
+    C2 -> B1 : 「予定を追加しました。」\nとメッセージを表示し\n一覧を表示する
+  end
+@enduml

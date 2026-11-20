@@ -1,0 +1,23 @@
+@startuml アカウント詳細
+  actor 一般ユーザー as AC
+  boundary "base.html" as B1
+  control "urls.py" as C0
+  control "account_detail" as C1
+  control "login_view" as C2
+  boundary "login.html" as B2
+  entity 要介護者 as E1
+  boundary "account_detail.html" as B3
+
+  AC -> B1 : 「アカウント」を押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  alt ログインしていない場合
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> B2 : ログイン画面を表示する
+  else ログイン済みの場合
+    C1 -> E1 : 参照()
+    C1 <-- E1
+    C1 -> B3 : アカウント情報と\n要介護者の一覧を表示する
+  end
+@enduml

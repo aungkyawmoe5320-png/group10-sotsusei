@@ -1,0 +1,33 @@
+@startuml アンケートに答えてPDFを作成する
+  actor 一般ユーザー as AC
+  boundary "survey.html" as B1
+  control "urls.py" as C0
+  control "summary_survey" as C1
+  entity まとめPDF as E1
+  control "summary_detail" as C2
+  entity 事前登録 as E2
+  entity スケジュール as E3
+  boundary "detail.html" as B2
+
+  AC -> B1 : 質問に答え、「同意」にチェックを入れる
+  B1 -> B1 : 作成するボタンを押せるようにする
+  AC -> B1 : 「PDFを作成する」ボタンを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  alt 必須項目や同意・署名が足りない場合
+    C1 -> B1 : エラーメッセージを表示する
+  else それ以外の場合
+    C1 -> E1 : 登録・更新()
+    C1 <-- E1
+    C1 -> C1 : セッションの\n選んだ項目を消す
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E1 : 参照()
+    C2 <-- E1
+    C2 -> E2 : 参照()
+    C2 <-- E2
+    C2 -> E3 : 参照()
+    C2 <-- E3
+    C2 -> B2 : 「PDFを作成しました。」\n（更新のときは「PDFを更新しました。」）\nとメッセージを表示し\nPDFを表示する
+  end
+@enduml

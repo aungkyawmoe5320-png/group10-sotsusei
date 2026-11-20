@@ -1,0 +1,23 @@
+@startuml 項目を決めてアンケートへ
+  actor 一般ユーザー as AC
+  boundary "summary.html" as B1
+  control "urls.py" as C0
+  control "summary_save" as C1
+  control "summary_survey" as C2
+  entity まとめPDF as E1
+  boundary "survey.html" as B2
+
+  AC -> B1 : まとめる項目を選び\n「アンケートに進む」ボタンを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  alt まとめる項目が1つも選ばれていない場合
+    C1 -> B1 : 「まとめる項目を1つ以上選んでください。」\nとメッセージを表示し\n選び直してもらう
+  else それ以外の場合
+    C1 -> C1 : 選んだ項目を\nセッションに保存する
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E1 : 参照()
+    C2 <-- E1
+    C2 -> B2 : アンケート画面を表示する
+  end
+@enduml

@@ -1,0 +1,28 @@
+@startuml PDFを見る
+  actor 一般ユーザー as AC
+  boundary "summary.html" as B1
+  control "urls.py" as C0
+  control "summary_detail" as C1
+  entity まとめPDF as E1
+  control "summary" as C2
+  entity 事前登録 as E2
+  entity スケジュール as E3
+  boundary "detail.html" as B2
+
+  AC -> B1 : 「開く」ボタンを押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  alt PDFがまだない場合
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> B1 : まとめる項目を選ぶ画面を表示する
+  else PDFがある場合
+    C1 -> E2 : 参照()
+    C1 <-- E2
+    C1 -> E3 : 参照()
+    C1 <-- E3
+    C1 -> B2 : PDFを表示する
+  end
+@enduml

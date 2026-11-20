@@ -1,0 +1,33 @@
+@startuml アカウント編集
+  actor 一般ユーザー as AC
+  boundary "account_detail.html" as B1
+  control "urls.py" as C0
+  control "account_edit" as C1
+  boundary "account_form.html" as B2
+  entity ユーザーアカウント as E1
+  control "account_detail" as C2
+  entity 要介護者 as E2
+
+  AC -> B1 : 「編集」ボタンを押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> B2 : 入力済みの入力画面を表示する
+  AC -> B2 : 内容を変更し\n「保存する」ボタンを押下する
+  B2 -> C0 : POST
+  C0 -> C1 : 起動()
+  alt 未入力の項目がある場合
+    C1 -> B2 : エラーメッセージを表示する
+  else メールアドレスが他のアカウントで使われている場合
+    C1 -> B2 : エラーメッセージを表示する
+  else 電話番号の形式が正しくない場合
+    C1 -> B2 : エラーメッセージを表示する
+  else それ以外の場合
+    C1 -> E1 : 更新()
+    C1 <-- E1
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> E2 : 参照()
+    C2 <-- E2
+    C2 -> B1 : 「アカウント情報を更新しました。」\nとメッセージを表示し\nアカウント詳細を表示する
+  end
+@enduml

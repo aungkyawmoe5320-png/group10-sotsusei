@@ -1,0 +1,24 @@
+@startuml 要介護者の切り替え
+  actor 一般ユーザー as AC
+  boundary "account_detail.html" as B1
+  control "urls.py" as C0
+  control "care_recipient_select" as C1
+  entity 要介護者 as E1
+  control "dashboard" as C2
+  boundary "dashboard_user.html" as B2
+  boundary "care_recipient_select.html" as B3
+
+  AC -> B1 : 「切り替える」ボタンを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  alt 自分の要介護者が選ばれた場合
+    C1 -> C1 : 選択した要介護者を\nセッションに保存する
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> B2 : 「〇〇さんを選択しました。」\nとメッセージを表示し\nホームを表示する
+  else それ以外の場合
+    C1 -> B3 : 「要介護者を選んでください。」\nとメッセージを表示し\n選択画面を表示する
+  end
+@enduml

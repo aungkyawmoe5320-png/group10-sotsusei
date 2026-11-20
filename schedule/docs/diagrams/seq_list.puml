@@ -1,0 +1,22 @@
+@startuml スケジュール一覧
+  actor 一般ユーザー as AC
+  boundary "base.html" as B1
+  control "urls.py" as C0
+  control "schedule_list" as C1
+  entity スケジュール as E1
+  entity アラート設定 as E2
+  boundary "list.html" as B2
+
+  AC -> B1 : 「スケジュール」を押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  C1 -> E2 : 参照()
+  C1 <-- E2
+  alt スケジュールが1件もない場合
+    C1 -> B2 : 「予定はまだありません。」\nとメッセージを表示する
+  else スケジュールがある場合
+    C1 -> B2 : 一覧を表示する
+  end
+@enduml

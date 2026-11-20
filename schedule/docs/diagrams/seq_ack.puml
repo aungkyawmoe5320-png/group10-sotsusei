@@ -1,0 +1,20 @@
+@startuml 通知から開いて確認する
+  actor 一般ユーザー as AC
+  boundary "sw.js" as B1
+  control "urls.py" as C0
+  control "schedule_list" as C1
+  entity 通知ログ as E1
+  entity スケジュール as E2
+  boundary "list.html" as B2
+
+  AC -> B1 : 通知をタップする
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  alt 通知から開いた場合
+    C1 -> E1 : 更新()
+    C1 <-- E1
+  end
+  C1 -> E2 : 参照()
+  C1 <-- E2
+  C1 -> B2 : 一覧を表示する
+@enduml
