@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'preregister',
     'schedule',
     'summary',
+    'support',
 ]
 
 MIDDLEWARE = [

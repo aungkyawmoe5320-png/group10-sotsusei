@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img">
+  <title>腰に手を当てて痛がっている人（横から見た図）</title>
+  <rect width="240" height="180" fill="#e8f5e9"/>
+  <rect x="0" y="152" width="240" height="28" fill="#c8e6c9"/>
+  <rect x="104" y="108" width="14" height="46" rx="6" fill="#46618d"/><rect x="122" y="108" width="14" height="46" rx="6" fill="#3a5379"/>
+  <rect x="100" y="150" width="22" height="8" rx="4" fill="#3a5379"/><rect x="120" y="150" width="22" height="8" rx="4" fill="#2f4466"/>
+  <rect x="98" y="58" width="40" height="64" rx="18" fill="#6c8ebf" transform="rotate(8 118 90)"/>
+  <circle cx="126" cy="44" r="18" fill="#f6d3b3"/>
+  <path d="M108 40 a18 18 0 0 1 36 0 q-18 -10 -36 0z" fill="#eceff4"/>
+  <circle cx="134" cy="46" r="2.2" fill="#4a4458"/><path d="M130 55 q5 3 9 0" fill="none" stroke="#4a4458" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M104 80 q-18 8 -6 30" fill="none" stroke="#6c8ebf" stroke-width="9" stroke-linecap="round"/><circle cx="99" cy="112" r="6" fill="#f6d3b3"/>
+  <path d="M70 70 l8 -6 l2 10 l9 -4 l-4 12 l9 2 l-12 8 l4 8 l-11 -4 l-2 8 l-7 -9 l-9 3 l3 -10 l-9 -5 l11 -4z" fill="#e57373" opacity=".9"/>
+</svg>

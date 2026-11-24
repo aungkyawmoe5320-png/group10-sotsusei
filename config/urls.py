@@ -7,4 +7,5 @@ urlpatterns = [
     path("", include("preregister.urls")),
     path("", include("schedule.urls")),
     path("", include("summary.urls")),
+    path("", include("support.urls")),
 ]

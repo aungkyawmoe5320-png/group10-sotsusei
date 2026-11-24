@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}緊急対応 | みまもりケアリンク{% endblock %}
+{% block content %}
+{% include "support/_style.html" %}
+{% url 'support' as back %}{% include "includes/back_button.html" with url=back %}
+<h1 class="h4 mb-1"><i class="bi bi-exclamation-triangle-fill text-danger"></i> 緊急対応</h1>
+<p class="text-muted">いまの状況に近いイラストを選んでください。対応のしかたをお知らせします。</p>
+<div class="row row-cols-2 row-cols-md-3 g-3">
+  {% for s in scenes %}
+  <div class="col">
+    <a href="{% url 'support_emergency_detail' key=s.key %}" class="card h-100 shadow-sm text-decoration-none text-body overflow-hidden">
+      <img src="{% static 'support/illustrations/'|add:s.image %}" alt="{{ s.alt }}" class="card-img-top illust">
+      <div class="card-body text-center py-2 px-2"><span class="fw-bold">{{ s.title }}</span></div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
