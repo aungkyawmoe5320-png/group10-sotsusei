@@ -1,4 +1,4 @@
-@startuml スケジュール編集
+@startuml スケジュールを変更する
   actor 一般ユーザー as AC
   boundary "list.html" as B1
   control "urls.py" as C0

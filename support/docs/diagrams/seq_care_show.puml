@@ -1,0 +1,40 @@
+@startuml 介護手順を表示する
+  actor 一般ユーザー as AC
+  boundary "care_steps.html" as B1
+  control "urls.py" as C0
+  control "care_steps" as C1
+  control "care_steps_result" as C2
+  control "support_emergency" as C3
+  boundary "care_steps_result.html" as B2
+  boundary "emergency_list.html" as B3
+
+  AC -> B1 : 現在の症状や行いたいことの\nイラストを押下する
+  B1 -> C0 : POST
+  C0 -> C1 : 起動()
+  alt 体の向きか内容が選ばれていない場合
+    C1 -> B1 : 「体の向きと内容のイラストを\n選んでください。」と\nメッセージを表示する
+  else 体の向きと内容が選ばれている場合
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> B2 : 「介護手順」画面を表示する
+  end
+  alt 「戻る」を押下した場合（「2. 内容」を表示中）
+    AC -> B1 : 「戻る」を押下する
+    B1 -> B1 : 画面を切り替えて\n「1. 体の向き」を表示する
+  else 「体の向きから選び直す」を押下した場合
+    AC -> B2 : 「体の向きから選び直す」を押下する
+    B2 -> C0 : GET
+    C0 -> C1 : 起動()
+    C1 -> B1 : 「体の向き」画面を表示する
+  else 「内容を選び直す」を押下した場合
+    AC -> B2 : 「内容を選び直す」を押下する
+    B2 -> C0 : GET
+    C0 -> C1 : 起動()
+    C1 -> B1 : 選んだ体の向きのまま\n「内容」画面を表示する
+  else 「緊急対応を見る」を押下した場合
+    AC -> B2 : 「緊急対応を見る」を押下する
+    B2 -> C0 : GET
+    C0 -> C3 : 起動()
+    C3 -> B3 : 「緊急対応」画面を表示する
+  end
+@enduml

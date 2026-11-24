@@ -1,4 +1,4 @@
-@startuml スケジュール一覧
+@startuml スケジュールを表示する
   actor 一般ユーザー as AC
   boundary "base.html" as B1
   control "urls.py" as C0

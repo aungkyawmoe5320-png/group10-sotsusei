@@ -1,4 +1,4 @@
-@startuml 要介護者の追加
+@startuml 要介護者を追加する
   actor 一般ユーザー as AC
   boundary "account_detail.html" as B1
   control "urls.py" as C0

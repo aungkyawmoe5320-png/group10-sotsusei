@@ -1,0 +1,18 @@
+@startuml アラート設定画面を表示する
+  actor 一般ユーザー as AC
+  boundary "list.html" as B1
+  control "urls.py" as C0
+  control "alert_settings" as C1
+  entity アラート設定 as E1
+  entity スケジュール as E2
+  boundary "alert_settings.html" as B2
+
+  AC -> B1 : 「アラート設定」ボタンを押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> E1 : 参照()
+  C1 <-- E1
+  C1 -> E2 : 参照()
+  C1 <-- E2
+  C1 -> B2 : 設定画面を表示する
+@enduml

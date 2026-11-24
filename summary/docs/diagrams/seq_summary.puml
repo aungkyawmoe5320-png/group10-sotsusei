@@ -1,4 +1,4 @@
-@startuml まとめる項目を選ぶ
+@startuml PDF作成画面を表示する
   actor 一般ユーザー as AC
   boundary "base.html" as B1
   control "urls.py" as C0

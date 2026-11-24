@@ -1,4 +1,4 @@
-@startuml 要介護者の削除
+@startuml 要介護者を削除する
   actor 一般ユーザー as AC
   boundary "care_recipient_form.html" as B1
   control "urls.py" as C0

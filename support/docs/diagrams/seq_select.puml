@@ -1,0 +1,27 @@
+@startuml 検索内容を選択する
+  actor 一般ユーザー as AC
+  boundary "top.html" as B1
+  control "urls.py" as C0
+  control "care_steps" as C1
+  control "support_emergency" as C2
+  control "dashboard" as C3
+  boundary "care_steps.html" as B2
+  boundary "emergency_list.html" as B3
+  boundary "dashboard_user.html" as B4
+
+  AC -> B1 : 「介護手順」を押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> B2 : 「体の向き」画面を表示する
+  alt 「緊急対応」を押下した場合
+    AC -> B1 : 「緊急対応」を押下する
+    B1 -> C0 : GET
+    C0 -> C2 : 起動()
+    C2 -> B3 : 「緊急対応」画面を表示する
+  else 「戻る」を押下した場合
+    AC -> B1 : 「戻る」を押下する
+    B1 -> C0 : GET
+    C0 -> C3 : 起動()
+    C3 -> B4 : ホームを表示する
+  end
+@enduml
