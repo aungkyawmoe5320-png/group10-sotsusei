@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img">
+  <title>ふつうの足と、むくんで太くなった足を並べたイラスト</title>
+  <rect width="240" height="180" fill="#e8f5e9"/>
+  <rect x="0" y="154" width="240" height="26" fill="#c8e6c9"/>
+  <path d="M58 6 h30 l-3 70 q-1 20 2 38 q2 18 0 34 h-26 q-2 -16 0 -34 q3 -18 2 -38z" fill="#f6d3b3"/>
+  <path d="M60 124 h26 v28 h-30z" fill="#fff" opacity="0"/>
+  <rect x="48" y="146" width="48" height="10" rx="5" fill="#3a5379"/>
+  <path d="M146 6 h46 l2 50 q16 14 10 44 q-2 22 4 34 q2 12 -4 20 h-62 q-6 -8 -4 -20 q6 -12 4 -34 q-6 -30 10 -44z" fill="#f3b6a0" stroke="#e08f7a" stroke-width="2"/>
+  <path d="M140 134 q30 8 62 0" fill="none" stroke="#e08f7a" stroke-width="3" stroke-linecap="round"/>
+  <rect x="136" y="146" width="76" height="10" rx="5" fill="#3a5379"/>
+  <ellipse cx="170" cy="96" rx="9" ry="6" fill="#e08f7a"/><ellipse cx="170" cy="96" rx="4" ry="2.6" fill="#c9705a"/>
+  <path d="M128 70 q-14 8 -30 8" fill="none" stroke="#e57373" stroke-width="0"/>
+  <g stroke="#e57373" stroke-width="4" stroke-linecap="round" fill="none">
+    <path d="M132 100 h-16"/><path d="M121 94 l-7 6 l7 6"/>
+    <path d="M214 100 h14"/><path d="M223 94 l7 6 l-7 6"/>
+  </g>
+  <g fill="#5b86c9"><path d="M146 38 q-5 8 0 12 q5 -4 0 -12z"/><path d="M196 30 q-5 8 0 12 q5 -4 0 -12z"/></g>
+</svg>

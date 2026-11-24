@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}介護手順 | みまもりケアリンク{% endblock %}
+{% block content %}
+{% include "support/_style.html" %}
+<style>
+  .illust-option:checked + label { border-color: var(--bs-success) !important; box-shadow: 0 0 0 .25rem rgba(25,135,84,.25); }
+  .illust-option:focus-visible + label { outline: 3px solid var(--bs-success); outline-offset: 2px; }
+  .illust-card { border: 3px solid transparent; cursor: pointer; }
+</style>
+<noscript><style>.step-pane[hidden] { display: block !important; }</style></noscript>
+{% url 'support' as back %}{% include "includes/back_button.html" with url=back %}
+<h1 class="h4 mb-1"><i class="bi bi-list-ol text-success"></i> 介護手順</h1>
+<form method="post" action="{% url 'care_steps' %}" id="care-steps-form">
+  {% csrf_token %}
+  {# 1. 体の向き: 選ぶと、この選択肢は隠れて「2. 内容」が出る #}
+  <section class="step-pane" id="step-posture"{% if posture %} hidden{% endif %}>
+    <p class="text-muted">いまの体の向きに近いイラストを選んでください。</p>
+    <h2 class="h6">1. 体の向き</h2>
+    <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
+      {% for p in postures %}
+      <div class="col">
+        <input type="radio" class="btn-check illust-option" name="posture" id="posture_{{ p.key }}" value="{{ p.key }}"{% if p.key == posture.key %} checked{% endif %} required>
+        <label class="card illust-card h-100 shadow-sm overflow-hidden w-100" for="posture_{{ p.key }}">
+          <img src="{% static 'support/illustrations/'|add:p.image %}" alt="{{ p.alt }}" class="card-img-top illust">
+          <span class="card-body text-center py-2 px-2 fw-bold">{{ p.title }}</span>
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {# 2. 内容: 「1. 体の向き」を選ぶまでは表示しない #}
+  <section class="step-pane" id="step-topic"{% if not posture %} hidden{% endif %}>
+    <p class="text-muted">知りたい内容に近いイラストを選んでください。選ぶと、手順の画面に進みます。</p>
+    <div class="mb-3">
+      <div class="small text-muted">体の向き：<strong id="chosen-posture">{{ posture.title }}</strong>（上の「戻る」で選び直せます）</div>
+      <img id="chosen-posture-image" class="rounded border mt-1" style="width: 7.5rem; height: auto; aspect-ratio: 4 / 3; object-fit: cover"
+           {% if posture %}src="{% static 'support/illustrations/'|add:posture.image %}" alt="{{ posture.alt }}"{% else %}src="" alt="" hidden{% endif %}>
+    </div>
+    <h2 class="h6">2. 内容</h2>
+    <div class="row row-cols-2 row-cols-md-3 g-3 mb-4">
+      {% for t in topics %}
+      <div class="col">
+        <input type="radio" class="btn-check illust-option" name="topic" id="topic_{{ t.key }}" value="{{ t.key }}"{% if t.key == topic.key %} checked{% endif %} required>
+        <label class="card illust-card h-100 shadow-sm overflow-hidden w-100" for="topic_{{ t.key }}">
+          <img src="{% static 'support/illustrations/'|add:t.image %}" alt="{{ t.alt }}" class="card-img-top illust">
+          <span class="card-body text-center py-2 px-2 fw-bold">{{ t.title }}</span>
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+    <noscript><button class="btn btn-success btn-lg"><i class="bi bi-send"></i> 手順を見る</button></noscript>
+  </section>
+</form>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  var posturePane = document.getElementById("step-posture"), topicPane = document.getElementById("step-topic");
+  var label = document.getElementById("chosen-posture"), chosenImage = document.getElementById("chosen-posture-image");
+  var form = document.getElementById("care-steps-form");
+  function show(pane, other) { pane.hidden = false; other.hidden = true; window.scrollTo(0, 0); }
+  // 体の向きのイラストを選んだら（選び済みのものを選び直したときも）、「2. 内容」に切り替える
+  document.querySelectorAll('input[name="posture"]').forEach(function (input) {
+    input.addEventListener("click", function () {
+      var card = document.querySelector('label[for="' + input.id + '"]');
+      label.textContent = card.querySelector(".card-body").textContent.trim();
+      var img = card.querySelector("img");   // 選んだ体の向きのイラストを、小さく表示する
+      chosenImage.src = img.getAttribute("src"); chosenImage.alt = img.alt; chosenImage.hidden = false;
+      show(topicPane, posturePane);
+    });
+  });
+  // 「2. 内容」のイラストを選んだら、そのまま手順の画面に進む（ボタンは不要）
+  document.querySelectorAll('input[name="topic"]').forEach(function (input) {
+    input.addEventListener("click", function () { form.submit(); });
+  });
+  // 画面上部の「戻る」ボタン: 「2. 内容」を表示しているときは、「1. 体の向き」に戻る（選んだ体の向きはそのまま）。
+  // 「1. 体の向き」を表示しているときは、いつもどおり前の画面（お困りサポート）に戻る
+  var backLink = Array.from(document.querySelectorAll("main a")).find(function (a) { return a.textContent.trim() === "戻る"; });
+  if (backLink) backLink.addEventListener("click", function (e) {
+    if (!topicPane.hidden) { e.preventDefault(); show(posturePane, topicPane); }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}介護の手順 | みまもりケアリンク{% endblock %}
+{% block content %}
+{% include "support/_style.html" %}
+{% include "includes/back_button.html" with url=back_url %}
+<div class="row g-4">
+  <div class="col-md-5 col-lg-4">
+    <div class="card shadow-sm overflow-hidden">
+      <div class="row g-0">
+        <div class="col-6"><img src="{% static 'support/illustrations/'|add:posture.image %}" alt="{{ posture.alt }}" class="illust"></div>
+        <div class="col-6"><img src="{% static 'support/illustrations/'|add:topic.image %}" alt="{{ topic.alt }}" class="illust"></div>
+      </div>
+      <div class="card-body">
+        <dl class="row mb-0 text-center text-md-start">
+          <dt class="col-4 text-muted small">体の向き</dt><dd class="col-8 fw-bold mb-1">{{ posture.title }}</dd>
+          <dt class="col-4 text-muted small">内容</dt><dd class="col-8 fw-bold mb-0">{{ topic.title }}</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="d-grid gap-2 mt-3">
+      <a class="btn btn-outline-secondary" href="{% url 'care_steps' %}"><i class="bi bi-arrow-repeat"></i> 体の向きから選び直す</a>
+      <a class="btn btn-outline-secondary" href="{{ back_url }}"><i class="bi bi-arrow-repeat"></i> 内容を選び直す</a>
+    </div>
+  </div>
+  <div class="col-md-7 col-lg-8">
+    <div class="card shadow-sm mb-3"><div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h5 mb-0"><i class="bi bi-list-ol text-success"></i> 介護の手順</h1>
+        <span class="badge text-bg-light border text-muted">表示例</span>
+      </div>
+      <ol class="list-group list-group-numbered list-group-flush">
+        {% for title, body in sol.steps %}
+        <li class="list-group-item d-flex"><div class="ms-2"><div class="fw-bold">{{ title }}</div><div class="text-muted">{{ body }}</div></div></li>
+        {% endfor %}
+      </ol>
+    </div></div>
+    <div class="alert alert-warning d-flex gap-2" role="alert"><i class="bi bi-exclamation-circle-fill"></i><div>{{ sol.caution }}</div></div>
+    {# 「体調を記録する」ボタンは、自動記録になる予定のため作らない（UI/UX 吉川さんより） #}
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-danger" href="{% url 'support_emergency' %}"><i class="bi bi-exclamation-triangle-fill"></i> 緊急対応を見る</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
