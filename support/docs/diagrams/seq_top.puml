@@ -1,0 +1,12 @@
+@startuml 検索画面を表示する
+  actor 一般ユーザー as AC
+  boundary "base.html" as B1
+  control "urls.py" as C0
+  control "support" as C1
+  boundary "top.html" as B2
+
+  AC -> B1 : 「お困りサポート」を押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  C1 -> B2 : 「お困りサポート」画面を表示する
+@enduml

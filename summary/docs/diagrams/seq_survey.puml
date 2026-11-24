@@ -1,4 +1,4 @@
-@startuml アンケートに答えてPDFを作成する
+@startuml PDFを作成する
   actor 一般ユーザー as AC
   boundary "survey.html" as B1
   control "urls.py" as C0

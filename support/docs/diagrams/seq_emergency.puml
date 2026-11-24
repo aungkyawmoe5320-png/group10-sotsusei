@@ -1,0 +1,32 @@
+@startuml 緊急対応を検索する
+  actor 一般ユーザー as AC
+  boundary "emergency_list.html" as B1
+  control "urls.py" as C0
+  control "support_emergency_detail" as C1
+  control "support_emergency" as C2
+  control "support" as C3
+  boundary "emergency_detail.html" as B2
+  boundary "top.html" as B3
+
+  AC -> B1 : 知りたい状況のイラストを押下する
+  B1 -> C0 : GET
+  C0 -> C1 : 起動()
+  alt 選んだ場面が見つからない場合
+    C1 -> C0 : リダイレクト()
+    C0 -> C2 : 起動()
+    C2 -> B1 : 「緊急対応」画面を表示する
+  else 選んだ場面がある場合
+    C1 -> B2 : 「緊急対応詳細」画面を表示する
+  end
+  alt 「戻る」を押下した場合（「緊急対応」画面）
+    AC -> B1 : 「戻る」を押下する
+    B1 -> C0 : GET
+    C0 -> C3 : 起動()
+    C3 -> B3 : 「お困りサポート」画面を表示する
+  else 「別の場面を選ぶ」を押下した場合（「緊急対応詳細」画面）
+    AC -> B2 : 「別の場面を選ぶ」を押下する
+    B2 -> C0 : GET
+    C0 -> C2 : 起動()
+    C2 -> B1 : 「緊急対応」画面を表示する
+  end
+@enduml

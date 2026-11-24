@@ -1,4 +1,4 @@
-@startuml 事前登録一覧
+@startuml 情報一覧を表示する
 
     actor    一般ユーザー        as AC
     boundary ホーム.html         as B1

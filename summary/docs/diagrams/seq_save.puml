@@ -1,4 +1,4 @@
-@startuml 項目を決めてアンケートへ
+@startuml 項目を選択する
   actor 一般ユーザー as AC
   boundary "summary.html" as B1
   control "urls.py" as C0

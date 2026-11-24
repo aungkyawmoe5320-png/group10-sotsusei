@@ -1,4 +1,4 @@
-@startuml アカウント詳細
+@startuml アカウントを表示する
   actor 一般ユーザー as AC
   boundary "base.html" as B1
   control "urls.py" as C0

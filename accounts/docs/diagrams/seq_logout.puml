@@ -1,4 +1,4 @@
-@startuml ログアウト
+@startuml ログアウトする
   actor 一般ユーザー as AC
   boundary "account_detail.html" as B1
   control "urls.py" as C0

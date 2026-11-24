@@ -1,4 +1,4 @@
-@startuml 事前登録
+@startuml 情報を登録する
 
     actor    一般ユーザー          as AC
     boundary list.html             as B1

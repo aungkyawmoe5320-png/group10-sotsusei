@@ -1,4 +1,4 @@
-@startuml 事前登録編集
+@startuml 情報を変更する
 
     actor    一般ユーザー          as AC
     boundary detail.html           as B1

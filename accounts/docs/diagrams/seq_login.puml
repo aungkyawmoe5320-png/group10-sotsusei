@@ -1,4 +1,4 @@
-@startuml ログイン
+@startuml ログインする
   actor 一般ユーザー as AC
   boundary "login.html" as B1
   control "urls.py" as C0
